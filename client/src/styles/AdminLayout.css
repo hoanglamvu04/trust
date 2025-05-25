@@ -1,0 +1,22 @@
+/* Đảm bảo main-content không bị đè */
+.admin-wrapper {
+  display: flex;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  background: #f8f9fa;
+  transition: margin-left 0.3s ease;
+  margin-left: 220px; /* sidebar rộng mặc định */
+}
+
+.admin-wrapper.collapsed .main-content {
+  margin-left: 60px; /* khi sidebar thu gọn */
+}
+
+/* Đảm bảo layout full height */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}

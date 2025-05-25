@@ -1,0 +1,31 @@
+.admin-header {
+    position: sticky;
+    top: 0;
+    background: #f8f9fd;
+    padding: 10px;
+    z-index: 10;
+    transition: top 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .admin-header.hide { top: -100px; }
+  .admin-header.show { top: 0; }
+  
+  .admin-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  .admin-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .btn-primary { background: #28a745; color: white; }
+  .btn-edit { background: #ffc107; color: black; }
+  .btn-delete { background: #dc3545; color: white; }
+  .btn-cancel { background: gray; color: white; }
+  .page-btn.active { background: #007bff; color: white; }
+  

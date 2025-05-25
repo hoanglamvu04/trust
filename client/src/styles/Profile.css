@@ -1,0 +1,138 @@
+/* ==== Bố cục tổng thể ==== */
+.profile-page {
+    display: flex;
+    min-height: calc(100vh - 100px);
+    background-color: #f5f7fa;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  
+  /* ==== Khu vực thông tin ==== */
+  .profile-info {
+    flex: 1;
+    padding: 20px;
+    background-color: #f0f4fb;
+  }
+  
+  .prl-tt{
+    font-size: 24px;
+    font-weight: bold;
+    text-transform:uppercase;
+    margin-bottom: 10px;
+  }
+  
+  .profile-content {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    max-width: 600px;
+  }
+  
+  /* ==== Các dòng thông tin ==== */
+  .info-section div {
+    margin-bottom: 15px;
+    font-size: 16px;
+  }
+  
+  .info-section span {
+    display: inline-block;
+    font-weight: bold;
+    width: 160px;
+  }
+  
+  /* ==== Nút chỉnh sửa & đổi mật khẩu ==== */
+  .main-edit-btn,
+  .edit-btn,
+  .change-password button {
+    background-color: black;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    margin-top: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .edit-btn {
+    margin-left: 12px;
+    font-size: 14px;
+    background-color: #444;
+  }
+  
+  .change-password {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+  }
+  
+  .change-password form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .change-password label {
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  
+  .change-password input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .btn-group {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .cancel-btn {
+    background-color: #ddd;
+    color: black;
+  }
+  
+  /* ==== Footer ==== */
+  footer {
+    background-color: #fff;
+    text-align: center;
+    font-size: 14px;
+    color: #777;
+    padding: 16px 0;
+    border-top: 1px solid #ddd;
+  }
+  
+  .btn-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .save-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .save-btn:hover {
+    background-color: #45a049;
+  }
+  
+  .cancel-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .cancel-btn:hover {
+    background-color: #d32f2f;
+  }
+  

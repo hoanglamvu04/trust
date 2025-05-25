@@ -1,0 +1,234 @@
+.check-website-layout {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: auto;
+  align-items: flex-start;
+}
+
+/* Sidebar lọc cố định */
+.filter-sidebar {
+  flex: 0 0 280px;
+  background: #f7f9fc;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  min-height: 600px;
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+}
+
+.filter-sidebar h2 {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.filter-sidebar input,
+.filter-sidebar select {
+  width: 100%;
+  padding: 0.6rem;
+  margin-bottom: 1rem;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: white;
+}
+
+/* Danh sách kết quả */
+.result-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.result-header {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.result-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  gap: 1rem;
+}
+
+/* Logo giả lập */
+.result-logo {
+  font-size: 2rem;
+  margin-right: 0.5rem;
+}
+
+/* Phần thông tin chính */
+.result-main {
+  flex: 1;
+}
+
+.result-main .domain-name {
+  font-weight: bold;
+  font-size: 1.05rem;
+  color: #222;
+}
+
+.result-main .date-found {
+  font-size: 13px;
+  color: #666;
+}
+
+.result-main .org,
+.result-main .label-field,
+.result-main .official {
+  font-size: 14px;
+  color: #444;
+  margin-top: 3px;
+}
+
+.result-main .official a {
+  color: #007bff;
+  text-decoration: none;
+}
+.result-main .official a:hover {
+  text-decoration: underline;
+}
+
+/* Trạng thái */
+.result-status {
+  min-width: 130px;
+  text-align: right;
+  font-weight: bold;
+  font-size: 14px;
+  color: #e67e22;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.result-status span.icon {
+  font-size: 16px;
+}
+
+/* Phân trang */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  background: #eee;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.pagination button.active {
+  background: #007bff;
+  color: white;
+  font-weight: bold;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .check-website-layout {
+    flex-direction: column;
+    padding: 1rem;
+  }
+
+  .filter-sidebar {
+    position: static;
+    width: 100%;
+    min-height: unset;
+  }
+
+  .result-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .result-status {
+    justify-content: flex-start;
+    margin-top: 0.5rem;
+  }
+}
+
+.result-card.modern {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.result-left {
+  flex-shrink: 0;
+}
+
+.result-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.result-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.result-center .domain-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.result-center .date-found,
+.result-center .label-field,
+.result-center .official {
+  font-size: 14px;
+  color: #555;
+}
+
+.result-center .official a {
+  color: #007bff;
+  text-decoration: none;
+}
+.result-center .official a:hover {
+  text-decoration: underline;
+}
+
+.result-right {
+  min-width: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: #e67e22;
+  gap: 6px;
+}
+
+.status-icon {
+  width: 18px;
+  height: 18px;
+}

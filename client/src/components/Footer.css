@@ -1,0 +1,30 @@
+.footer {
+  text-align: center;
+  background-color: #fff;
+  color: #666;
+  border-top: 1px solid #eee;
+  margin-top: 4rem;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+.footer .social-links {
+  margin-bottom: 1rem;
+}
+
+.footer .social-links a {
+  margin: 0 1rem;
+  font-weight: 500;
+  color: #1e90ff;
+  transition: 0.2s;
+}
+
+.footer .social-links a:hover {
+  text-decoration: underline;
+}
+
+.dev-note {
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+  color: #444;
+}

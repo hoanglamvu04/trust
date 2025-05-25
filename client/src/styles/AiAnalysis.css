@@ -1,0 +1,187 @@
+.ai-analysis-container {
+  padding: 20px;
+  background-color: #f4f6fa;
+}
+
+.intro {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.intro h1 {
+  font-size: 24px;
+  color: #333;
+}
+
+.intro p {
+  font-size: 16px;
+  margin: 5px 0;
+}
+
+.intro small {
+  font-size: 13px;
+  color: #666;
+}
+
+.ai-input {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 10px;
+  position: relative;
+}
+
+.ai-input input {
+  width: 400px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+.ai-input button {
+  background-color: #199473;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-size: 16px;
+  cursor: pointer;
+  position: relative;
+}
+
+.ai-grid {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.ai-left, .ai-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ai-box {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.ai-risk {
+  background-color: #ffe5e5;
+  border-left: 5px solid red;
+}
+
+.text-danger {
+  color: red;
+  font-weight: bold;
+}
+
+.loader {
+  text-align: center;
+  font-style: italic;
+  font-size: 14px;
+  color: #666;
+  margin-top: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #ddd;
+  font-size: 14px;
+}
+
+th {
+  background-color: #f0f2f5;
+  text-align: left;
+}
+
+.badge-risk {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background-color: #ffd6d6;
+  color: red;
+  font-weight: bold;
+}
+
+.reanalyze-btn {
+  margin-top: 15px;
+  background-color: #199473;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.source-table td.text-danger {
+  color: red;
+  font-weight: bold;
+}
+
+.ai-box img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 10px 0;
+}
+
+.pagination {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.pagination button {
+  margin: 0 5px;
+  border: none;
+  padding: 5px 10px;
+  background-color: #eaeaea;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination button.active {
+  background-color: #199473;
+  color: white;
+}
+
+.pagination button:hover {
+  cursor: pointer;
+  background-color: #cccccc;
+}
+
+.disabled-tooltip[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  background: #333;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  white-space: nowrap;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%) scale(0.95);
+  z-index: 10;
+  opacity: 0;
+  animation: fadein 0.3s forwards;
+}
+
+@keyframes fadein {
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+}

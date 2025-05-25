@@ -1,0 +1,102 @@
+/* ===== Khi không có kết quả + Rating ===== */
+.not-found-box {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-top: 2rem;
+  }
+  
+  .not-found-box .highlight {
+    color: #007bff;
+    font-weight: bold;
+  }
+  
+  .rating-stars {
+    margin-top: 1.25rem;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+  
+  .rating-star-img {
+    width: 30px !important;
+    height: 30px !important;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  
+  .rating-star-img:hover {
+    transform: scale(1.2);
+  }
+  
+  .search-stats {
+    margin-top: 1.75rem;
+    display: flex;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
+    font-size: 0.95rem;
+  }
+  
+  .rating-bars {
+    margin: 2.5rem auto;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+  
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .label {
+    min-width: 110px;
+    font-weight: bold;
+    font-size: 0.95rem;
+  }
+  
+  .label.clickable {
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  
+  .label.clickable:hover {
+    opacity: 0.85;
+  }
+  
+  .progress {
+    flex: 1;
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #e0e0e0;
+    border: none;
+  }
+  
+  .progress.blue::-webkit-progress-value {
+    background-color: #007bff;
+  }
+  
+  .progress.red::-webkit-progress-value {
+    background-color: red;
+  }
+  
+  .progress.yellow::-webkit-progress-value {
+    background-color: #f1c40f;
+  }
+  
+  .progress.green::-webkit-progress-value {
+    background-color: #28a745;
+  }
+  
+  .note {
+    font-style: italic;
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 1.5rem;
+    text-align: center;
+  }
+  

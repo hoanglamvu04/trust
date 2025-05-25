@@ -1,0 +1,118 @@
+.admin-page {
+    padding: 20px;
+  }
+  
+  .admin-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .admin-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .admin-input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+  
+  .admin-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  .btn-primary {
+    background: #4CAF50;
+    color: white;
+  }
+  
+  .btn-edit {
+    background: #ffc107;
+    color: black;
+    margin-right: 5px;
+  }
+  
+  .btn-delete {
+    background: #f44336;
+    color: white;
+  }
+  
+  .btn-cancel {
+    background: #aaa;
+    color: white;
+  }
+  
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .admin-table th, .admin-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+  }
+  
+  .admin-pagination {
+    margin-top: 15px;
+  }
+  
+  .page-btn.active {
+    font-weight: bold;
+    background: #4CAF50;
+    color: white;
+  }
+  
+  .admin-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex; justify-content: center; align-items: center;
+  }
+  
+  .admin-modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    min-width: 300px;
+  }
+  
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .admin-page {
+    padding: 20px;
+  }
+  .filter-tabs button {
+    margin-right: 8px;
+    padding: 6px 12px;
+  }
+  .filter-tabs .active {
+    background: black;
+    color: white;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  th, td {
+    border: 1px solid #ccc;
+    padding: 6px;
+    text-align: left;
+  }
+  button {
+    margin: 2px;
+  }
+  .pagination {
+    margin-top: 10px;
+  }
+  
