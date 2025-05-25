@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoginModal from "./LoginModal";
-import NotificationModal from "./NotificationModal"; 
+import NotificationModal from "./NotificationModal";
 
 export default function Header() {
   const [user, setUser] = useState({ isLoggedIn: false, name: "" });
@@ -24,43 +24,40 @@ export default function Header() {
     createdAt: new Date().toLocaleDateString("vi-VN"),
   });
 
-// (phần đầu giữ nguyên)
-
-useEffect(() => {
-  const fetchUser = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/auth/me", {
-        credentials: "include",
-      });
-      const result = await res.json();
-      if (result.success) {
-        setUser({ isLoggedIn: true, name: result.user.name });
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/auth/me", {
+          credentials: "include",
+        });
+        const result = await res.json();
+        if (result.success) {
+          setUser({ isLoggedIn: true, name: result.user.name });
+        }
+      } catch (err) {
+        console.error("Lỗi lấy user:", err);
       }
-    } catch (err) {
-      console.error("Lỗi lấy user:", err);
-    }
-  };
-  fetchUser();
-}, []);
+    };
+    fetchUser();
+  }, []);
 
-// ✅ Đồng bộ login/logout giữa các tab
-useEffect(() => {
-  const onStorageChange = (e) => {
-    if (e.key === "auth-event") {
-      const { type } = JSON.parse(e.newValue);
-      if (type === "logout") {
-        setUser({ isLoggedIn: false, name: "" });
-        localStorage.removeItem("user");
-        window.location.reload();
-      } else if (type === "login") {
-        window.location.reload();
+  // ✅ Đồng bộ login/logout giữa các tab
+  useEffect(() => {
+    const onStorageChange = (e) => {
+      if (e.key === "auth-event") {
+        const { type } = JSON.parse(e.newValue);
+        if (type === "logout") {
+          setUser({ isLoggedIn: false, name: "" });
+          localStorage.removeItem("user");
+          window.location.reload();
+        } else if (type === "login") {
+          window.location.reload();
+        }
       }
-    }
-  };
-  window.addEventListener("storage", onStorageChange);
-  return () => window.removeEventListener("storage", onStorageChange);
-}, []);
-
+    };
+    window.addEventListener("storage", onStorageChange);
+    return () => window.removeEventListener("storage", onStorageChange);
+  }, []);
 
   const handleProtectedClick = (url) => {
     if (user.isLoggedIn) {
@@ -83,6 +80,7 @@ useEffect(() => {
       if (result.success) {
         toast.success(result.message, { position: "top-right" });
         setUser({ isLoggedIn: true, name: result.user.name });
+        localStorage.setItem("auth-event", JSON.stringify({ type: "login", time: Date.now() }));
         setShowLoginModal(false);
         setTimeout(() => {
           window.location.reload();
@@ -145,6 +143,7 @@ useEffect(() => {
       if (result.success) {
         toast.success(result.message, { position: "top-right" });
         setUser({ isLoggedIn: false, name: "" });
+        localStorage.setItem("auth-event", JSON.stringify({ type: "logout", time: Date.now() }));
         setTimeout(() => window.location.reload(), 500);
       } else {
         toast.error(result.message, { position: "top-right" });
@@ -165,16 +164,14 @@ useEffect(() => {
           <nav>
             <Link to="/check-account">Tra cứu STK</Link>
             <Link to="/check-website">Tra cứu Website</Link>
-
-            <a className="nav-link" onClick={() => handleProtectedClick("/report")}>
-              Gửi tố cáo
-            </a>
-
+            <a className="nav-link" onClick={() => handleProtectedClick("/report")}>Gửi tố cáo</a>
             <a className="nav-link" onClick={() => navigate("/ai-analysis")}>AI phân tích WEB</a>
 
             {user.isLoggedIn ? (
               <>
-                <a className="nav-link" onClick={() => handleProtectedClick("/profile")}>👤 {user.name}</a>
+                <a className="nav-link" onClick={() => handleProtectedClick("/profile")}>
+                  👤 {user.name}
+                </a>
                 <img
                   src="/images/notification.png"
                   alt="Thông báo"
