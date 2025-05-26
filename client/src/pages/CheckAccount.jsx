@@ -5,7 +5,7 @@ import Footer from "../components/Footer";
 import SearchHeader from "../components/SearchHeader";
 import NotFoundRating from "../components/NotFoundRating";
 import "../styles/CheckAccount.css";
-import React from 'react';
+import React from "react";
 
 export default function CheckAccount() {
   const [account, setAccount] = useState("");
@@ -15,17 +15,17 @@ export default function CheckAccount() {
   const reportsPerPage = 5;
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // ✅ LẤY TẤT CẢ REPORTS
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/report/all");
+        const res = await fetch("http://localhost:5000/api/report");
         const data = await res.json();
         if (Array.isArray(data)) {
-          const sorted = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          const unique = Array.from(new Map(data.map(r => [r.id, r])).values());
+          const sorted = unique.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
           setAllReports(sorted);
         } else {
-          console.error("API trả không phải array:", data);
+          console.error("API không trả về array:", data);
         }
       } catch (err) {
         console.error("Lỗi khi gọi API:", err);
@@ -34,26 +34,24 @@ export default function CheckAccount() {
     fetchReports();
   }, []);
 
-  // ✅ FILTER THEO account + GỌI API log search
   useEffect(() => {
     const queryAccount = searchParams.get("search");
     if (queryAccount) {
       setAccount(queryAccount);
 
-      // 🟢 GỌI API POST ĐỂ LOG LƯỢT TÌM KIẾM
-      fetch('http://localhost:5000/api/searchlog', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      fetch("http://localhost:5000/api/searchlog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ account: queryAccount })
       })
         .then(res => res.json())
-        .then(data => console.log('Đã log search:', data))
-        .catch(err => console.error('Log search error:', err));
+        .then(data => console.log("Đã log search:", data))
+        .catch(err => console.error("Log search error:", err));
 
-      const filtered = allReports.filter((r) =>
-        r.accountNumber && r.accountNumber.includes(queryAccount)
+      const filtered = allReports.filter(
+        (r) => r.accountNumber && r.accountNumber.includes(queryAccount)
       );
-      setReports(filtered.length > 0 ? filtered : []);
+      setReports(filtered);
     } else {
       setReports(allReports);
     }
@@ -66,24 +64,18 @@ export default function CheckAccount() {
 
   const renderReportTitle = () => {
     if (reports.length === 0) return null;
-    const groupedByDate = allReports.reduce((acc, r) => {
-      const dateStr = new Date(r.createdAt).toLocaleDateString('vi-VN');
+    const groupedByDate = reports.reduce((acc, r) => {
+      const dateStr = new Date(r.createdAt).toLocaleDateString("vi-VN");
       if (!acc[dateStr]) acc[dateStr] = [];
       acc[dateStr].push(r);
       return acc;
     }, {});
     const dates = Object.keys(groupedByDate).sort((a, b) => {
-      const [d1, m1, y1] = a.split('/').map(Number);
-      const [d2, m2, y2] = b.split('/').map(Number);
+      const [d1, m1, y1] = a.split("/").map(Number);
+      const [d2, m2, y2] = b.split("/").map(Number);
       return new Date(y2, m2 - 1, d2) - new Date(y1, m1 - 1, d1);
     });
-    let selectedDate = dates[0];
-    for (const d of dates) {
-      if (groupedByDate[d].length > 0) {
-        selectedDate = d;
-        break;
-      }
-    }
+    const selectedDate = dates[0];
     const count = groupedByDate[selectedDate]?.length || 0;
     return (
       <h3 className="report-title">
@@ -108,7 +100,7 @@ export default function CheckAccount() {
 
         <div className="report-list">
           {currentReports.map((r, index) => (
-            <Link to={`/report/${r._id}`} key={r._id || index} className="report-card">
+            <Link to={`/report/${r.id}`} key={`${r.id}-${index}`} className="report-card">
               <div className="report-top">
                 <span className="report-name">{r.accountName}</span>
                 <span className="report-id">
@@ -125,9 +117,7 @@ export default function CheckAccount() {
           ))}
         </div>
 
-        {reports.length === 0 && account && (
-          <NotFoundRating account={account} />
-        )}
+        {reports.length === 0 && account && <NotFoundRating account={account} />}
 
         <div className="pagination">
           {Array.from({ length: totalPages }, (_, i) => (

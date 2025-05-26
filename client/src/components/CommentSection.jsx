@@ -1,182 +1,151 @@
 import { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import React from 'react';
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import "dayjs/locale/vi";
+import React from "react";
 
-export default function CommentSection({ reportId, currentUser }) {
-  const [userName, setUserName] = useState("");
+dayjs.extend(relativeTime);
+dayjs.locale("vi");
+
+export default function CommentSection({ reportId }) {
+  const [userId, setUserId] = useState("");
   const [loadingUser, setLoadingUser] = useState(true);
   const [comments, setComments] = useState([]);
   const [content, setContent] = useState("");
-  const [loadingComments, setLoadingComments] = useState(true);
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyContent, setReplyContent] = useState({});
+  const [alias, setAlias] = useState("");
 
   useEffect(() => {
-    if (currentUser && currentUser.name) {
-      setUserName(currentUser.name);
-      setLoadingUser(false);
-    } else {
-      const fetchCurrentUser = async () => {
-        try {
-          const res = await fetch("http://localhost:5000/api/auth/me", { credentials: "include" });
-          const result = await res.json();
-          if (result.success) {
-            setUserName(result.user.name);
-          } else {
-            setUserName("");
-          }
-        } catch (err) {
-          console.error("❌ Lỗi lấy user:", err);
-          setUserName("");
-        } finally {
-          setLoadingUser(false);
-        }
-      };
-      fetchCurrentUser();
-    }
-  }, [currentUser]);
-
-  const isLoggedIn = !!userName;
-
-  useEffect(() => {
-    const fetchComments = async () => {
+    const fetchUser = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/comments/report/${reportId}`);
+        const res = await fetch(`http://localhost:5000/api/auth/me?reportId=${reportId}`, {
+          credentials: "include",
+        });
         const result = await res.json();
         if (result.success) {
-          setComments(result.comments);
-        } else {
-          console.error(result.message);
+          setUserId(result.user.id);
+          setAlias(result.user.alias || "");
         }
       } catch (err) {
-        console.error("❌ Lỗi lấy comments:", err);
+        console.error("❌ Lỗi lấy user:", err);
       } finally {
-        setLoadingComments(false);
+        setLoadingUser(false);
       }
     };
-    if (reportId) fetchComments();
-  }, [reportId]);
+    fetchUser();
+  }, []);
 
-  // ✅ Bổ sung scroll đến comment theo hash
-  useEffect(() => {
-    const hash = window.location.hash;
-    if (hash) {
-      const el = document.querySelector(hash);
-      if (el) {
-        setTimeout(() => {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
-          el.classList.add("highlight-comment");
-          setTimeout(() => el.classList.remove("highlight-comment"), 2000);
-        }, 300);
-      }
+  const isLoggedIn = !!userId;
+
+  const fetchComments = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/comments/${reportId}`);
+      const data = await res.json();
+
+      const sorted = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const parsed = sorted.map((c) => {
+        let replies = [];
+        try {
+          replies = typeof c.replies === "string" ? JSON.parse(c.replies) : (Array.isArray(c.replies) ? c.replies : []);
+        } catch (e) {
+          console.warn("❗️Lỗi parse replies:", e, c.replies);
+        }
+
+        let likes = [];
+        try {
+          likes = typeof c.likes === "string" ? JSON.parse(c.likes) : (Array.isArray(c.likes) ? c.likes : []);
+        } catch (e) {
+          console.warn("❗️Lỗi parse likes:", e, c.likes);
+        }
+
+        return {
+          ...c,
+          replies,
+          likes
+        };
+      });
+
+      setComments(parsed);
+
+      // Lấy alias của user hiện tại từ comment đầu tiên tìm thấy
+      const comment = parsed.find(c => c.userId === userId);
+      if (comment) setAlias(comment.userName);
+
+    } catch (err) {
+      console.error("❌ Lỗi lấy comments:", err);
     }
-  }, [comments]);
+  };
+
+  useEffect(() => {
+    if (reportId) fetchComments();
+  }, [reportId, userId]);
 
   const handleSubmit = async () => {
     if (!content.trim()) {
-      toast.error("Vui lòng nhập nội dung!", { position: "top-right" });
+      toast.error("Vui lòng nhập nội dung!");
       return;
     }
     try {
-      const res = await fetch("http://localhost:5000/api/comments/add", {
+      const res = await fetch("http://localhost:5000/api/comments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ reportId, content }),
+        body: JSON.stringify({ reportId, userId, content }),
       });
       const result = await res.json();
-      if (result.success) {
-        toast.success("Bình luận thành công!", { position: "top-right" });
-        setComments(prev => [result.comment, ...prev]);
+      if (res.ok) {
         setContent("");
+        setAlias(result.alias); // cập nhật alias mới nếu cần
+        fetchComments();
       } else {
-        toast.error(result.message, { position: "top-right" });
+        toast.error(result.message);
       }
     } catch (err) {
-      console.error("❌ Lỗi gửi comment:", err);
-      toast.error("Lỗi server!", { position: "top-right" });
+      toast.error("Lỗi server!");
     }
   };
 
   const handleLike = async (commentId) => {
-    if (!isLoggedIn) {
-      toast.error("Bạn chưa đăng nhập!", { position: "top-right" });
-      return;
-    }
+    if (!isLoggedIn) return toast.error("Bạn chưa đăng nhập!");
     try {
-      const res = await fetch("http://localhost:5000/api/comments/like", {
-        method: "POST",
+      const res = await fetch(`http://localhost:5000/api/comments/${commentId}/like`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ commentId }),
+        body: JSON.stringify({ userId }),
       });
-      const result = await res.json();
-      if (result.success) {
-        const updatedComments = await fetch(`http://localhost:5000/api/comments/report/${reportId}`);
-        const updatedResult = await updatedComments.json();
-        if (updatedResult.success) {
-          setComments(updatedResult.comments);
-        }
+      if (res.ok) {
+        fetchComments();
       } else {
-        toast.error(result.message, { position: "top-right" });
+        toast.error("Lỗi like");
       }
     } catch (err) {
-      console.error("❌ Lỗi like:", err);
-      toast.error("Lỗi server!", { position: "top-right" });
-    }
-  };
-
-  const handleDelete = async (commentId) => {
-    if (!window.confirm("Xác nhận xoá bình luận?")) return;
-    try {
-      const res = await fetch("http://localhost:5000/api/comments/delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ commentId }),
-      });
-      const result = await res.json();
-      if (result.success) {
-        setComments(prev => prev.filter(c => c._id !== commentId));
-        toast.success("Đã xoá bình luận!", { position: "top-right" });
-      } else {
-        toast.error(result.message, { position: "top-right" });
-      }
-    } catch (err) {
-      console.error("❌ Lỗi xoá comment:", err);
-      toast.error("Lỗi server!", { position: "top-right" });
+      toast.error("Lỗi khi like");
     }
   };
 
   const handleReply = async (commentId, replyText) => {
-    if (!replyText || !replyText.trim()) {
-      toast.error("Vui lòng nhập nội dung phản hồi!", { position: "top-right" });
+    if (!replyText.trim()) {
+      toast.error("Nhập nội dung phản hồi!");
       return;
     }
     try {
-      const res = await fetch("http://localhost:5000/api/comments/reply", {
-        method: "POST",
+      const res = await fetch(`http://localhost:5000/api/comments/${commentId}/reply`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ commentId, content: replyText }),
+        body: JSON.stringify({ userId, content: replyText }),
       });
       const result = await res.json();
-      if (result.success) {
-        toast.success("Phản hồi thành công!", { position: "top-right" });
-        setComments(prev =>
-          prev.map(c =>
-            c._id === commentId ? { ...c, replies: result.replies } : c
-          )
-        );
+      if (res.ok) {
+        setReplyContent((prev) => ({ ...prev, [commentId]: "" }));
         setReplyingTo(null);
-        setReplyContent(prev => ({ ...prev, [commentId]: "" }));
+        fetchComments();
       } else {
-        toast.error(result.message, { position: "top-right" });
+        toast.error(result.message);
       }
     } catch (err) {
-      console.error("❌ Lỗi phản hồi:", err);
-      toast.error("Lỗi server!", { position: "top-right" });
+      toast.error("Lỗi phản hồi!");
     }
   };
 
@@ -184,69 +153,97 @@ export default function CommentSection({ reportId, currentUser }) {
 
   return (
     <div className="comment-section">
-      {!isLoggedIn ? (
-        <p className="login-required">Hãy đăng nhập để gửi bình luận!</p>
-      ) : (
+      {isLoggedIn ? (
         <>
-          <p><strong>{userName}:</strong> Để lại bình luận của bạn:</p>
+          <p>
+            <strong>Bình luận với tên:</strong> {alias || "(đang tạo...)"}
+          </p>
           <textarea
             className="comment-input"
             value={content}
-            onChange={e => setContent(e.target.value)}
+            onChange={(e) => setContent(e.target.value)}
             rows={3}
             placeholder="Nhập nội dung bình luận..."
           />
-          <button className="comment-btn submit" onClick={handleSubmit}>Gửi bình luận</button>
+          <button className="comment-btn submit" onClick={handleSubmit}>
+            Gửi bình luận
+          </button>
         </>
+      ) : (
+        <p className="login-required">Hãy đăng nhập để gửi bình luận!</p>
       )}
 
       <h4 className="comment-title">Tất cả bình luận:</h4>
-      {loadingComments ? (
-        <p>Đang tải bình luận...</p>
-      ) : comments.length === 0 ? (
-        <p>Chưa có bình luận nào.</p>
-      ) : (
-        comments.map(c => (
-          <div key={c._id} id={`comment${c._id}`} className="comment-item">
-            <p><strong>{c.userName}</strong>: {c.content}</p>
-            <p className="comment-meta">
-              ❤️ {c.likes.length} likes
-              {isLoggedIn && (
-                <>
-                  <button className="comment-btn like" onClick={() => handleLike(c._id)}>Like</button>
-                  <button className="comment-btn reply" onClick={() => setReplyingTo(c._id)}>Trả lời</button>
-                  {c.userName === userName && (
-                    <button className="comment-btn delete" onClick={() => handleDelete(c._id)}>Xoá</button>
-                  )}
-                </>
-              )}
-            </p>
-
-            {replyingTo === c._id && isLoggedIn && (
-              <div className="reply-box">
-                <textarea
-                  className="reply-input"
-                  value={replyContent[c._id] || ""}
-                  onChange={e => setReplyContent(prev => ({ ...prev, [c._id]: e.target.value }))}
-                  rows={2}
-                  placeholder="Nhập nội dung phản hồi..."
-                />
-                <button className="comment-btn send-reply" onClick={() => handleReply(c._id, replyContent[c._id])}>Gửi phản hồi</button>
-                <button className="comment-btn cancel-reply" onClick={() => { setReplyingTo(null); setReplyContent(prev => ({ ...prev, [c._id]: "" })); }}>Huỷ</button>
-              </div>
+      {comments.map((c) => (
+        <div key={c.id} className="comment-item">
+          <p>
+            <strong>{c.userName}</strong>: {c.content}
+          </p>
+          <p className="comment-meta">
+            ❤️ {c.likes.length}
+            <button
+              className={`comment-btn like ${c.likes.includes(userId) ? "liked" : ""}`}
+              onClick={() => handleLike(c.id)}
+            >
+              {c.likes.includes(userId) ? "Đã like" : "Like"}
+            </button>
+            {isLoggedIn && (
+              <button
+                className="comment-btn reply"
+                onClick={() => setReplyingTo(c.id)}
+              >
+                Trả lời
+              </button>
             )}
+            <span className="comment-time">
+              {dayjs(c.createdAt).fromNow()}
+            </span>
+          </p>
 
-            {c.replies && c.replies.length > 0 && (
-              <div className="reply-list">
-                <p><strong>Phản hồi:</strong></p>
-                {c.replies.map((r, idx) => (
-                  <p key={idx} className="reply-item"><strong>{r.userName}</strong>: {r.content}</p>
-                ))}
-              </div>
-            )}
-          </div>
-        ))
-      )}
+          {replyingTo === c.id && (
+            <div className="reply-box">
+              <textarea
+                className="reply-input"
+                value={replyContent[c.id] || ""}
+                onChange={(e) =>
+                  setReplyContent((prev) => ({
+                    ...prev,
+                    [c.id]: e.target.value,
+                  }))
+                }
+                rows={2}
+                placeholder="Nhập nội dung phản hồi..."
+              />
+              <button
+                className="comment-btn send-reply"
+                onClick={() => handleReply(c.id, replyContent[c.id])}
+              >
+                Gửi phản hồi
+              </button>
+              <button
+                className="comment-btn cancel-reply"
+                onClick={() => setReplyingTo(null)}
+              >
+                Huỷ
+              </button>
+            </div>
+          )}
+
+          {Array.isArray(c.replies) && c.replies.length > 0 && (
+            <div className="reply-list">
+              <p><strong>Phản hồi:</strong></p>
+              {c.replies.map((r, idx) => (
+                <p key={idx} className="reply-item">
+                  <strong>{r.userName}</strong>: {r.content}{" "}
+                  <span className="reply-time">
+                    {dayjs(r.createdAt).fromNow()}
+                  </span>
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
       <ToastContainer />
     </div>
   );

@@ -33,7 +33,6 @@ export default function AdminGuard({ children }) {
     check();
   }, []);
 
-  // ✅ Theo dõi login/logout từ localStorage để đồng bộ giữa các tab
   useEffect(() => {
     const onStorageChange = (e) => {
       if (e.key === "auth-event") {

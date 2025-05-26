@@ -17,7 +17,7 @@ app.use('/api/accounts', accountRoutes);
 const facebookAccountRoutes = require('./routes/facebookAccount');
 app.use('/api/facebook', facebookAccountRoutes);
 
-app.use('/api/report-details', require('./routes/reportDetail'));
+app.use('/api/report-detail', require('./routes/reportDetail'));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/report', require('./routes/report'));
 app.use('/api/ratings', require('./routes/rating'));

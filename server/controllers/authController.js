@@ -85,22 +85,43 @@ exports.login = async (req, res) => {
 // Lấy thông tin user hiện tại từ token
 exports.getCurrentUser = async (req, res) => {
   const token = req.cookies.token;
+  const reportId = req.query.reportId; // lấy reportId từ query
+
   if (!token) return res.status(401).json({ success: false, message: 'Bạn chưa đăng nhập!' });
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key');
+    const userId = decoded.id;
+
     const [users] = await db.query(
       'SELECT id, username, name, email, createdAt, roleId FROM users WHERE id = ?',
-      [decoded.id]
+      [userId]
     );
     if (users.length === 0)
       return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng.' });
 
-    res.json({ success: true, user: users[0] });
+    // ✅ Thêm đoạn lấy alias nếu có reportId
+    let alias = "";
+    if (reportId) {
+      const [rows] = await db.query(
+        "SELECT alias FROM anonymous_aliases WHERE userId = ? AND reportId = ? LIMIT 1",
+        [userId, reportId]
+      );
+      alias = rows[0]?.alias || "";
+    }
+
+    res.json({
+      success: true,
+      user: {
+        ...users[0],
+        alias, // ✅ Trả về alias ở đây
+      }
+    });
   } catch (err) {
     res.status(401).json({ success: false, message: 'Token không hợp lệ!' });
   }
 };
+
 
 exports.logout = (req, res) => {
   res.clearCookie('token').json({ success: true, message: 'Đăng xuất thành công!' });
