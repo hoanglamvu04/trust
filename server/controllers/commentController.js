@@ -1,122 +1,131 @@
-const db = require('../db');
-const { v4: uuidv4 } = require('uuid');
+const db = require("../db");
+const { v4: uuidv4 } = require("uuid");
 
-// Lấy tên giả chưa dùng trong bài viết
+// 📌 Lấy alias chưa sử dụng trong 1 report
 async function getUnusedAlias(reportId) {
-  const [usedRows] = await db.query(
-    'SELECT alias FROM anonymous_aliases WHERE reportId = ?',
+  const [used] = await db.query(
+    "SELECT alias FROM anonymous_aliases WHERE reportId = ?",
     [reportId]
   );
-  const used = usedRows.map(row => row.alias);
+  const usedAliases = used.map(row => row.alias);
 
-  const [availableRows] = await db.query(
-    'SELECT name FROM alias_pool WHERE name NOT IN (?) ORDER BY RAND() LIMIT 1',
-    [used.length ? used : ['']]
+  const [available] = await db.query(
+    "SELECT name FROM alias_pool WHERE name NOT IN (?) ORDER BY RAND() LIMIT 1",
+    [usedAliases.length ? usedAliases : [""]]
   );
-  return availableRows[0]?.name || `Người ẩn danh #${Math.floor(Math.random() * 10000)}`;
+
+  return available[0]?.name || `Người ẩn danh #${Math.floor(Math.random() * 10000)}`;
 }
 
-// Lấy tất cả bình luận theo reportId
+// 📌 Lấy alias cố định cho user trong 1 report, tạo mới nếu chưa có
+async function ensureAlias(userId, reportId) {
+  const [[existing]] = await db.query(
+    "SELECT alias FROM anonymous_aliases WHERE userId = ? AND reportId = ? LIMIT 1",
+    [userId, reportId]
+  );
+
+  if (existing) return existing.alias;
+
+  const alias = await getUnusedAlias(reportId);
+
+  await db.query(
+    "INSERT INTO anonymous_aliases (id, userId, reportId, alias) VALUES (?, ?, ?, ?)",
+    [uuidv4(), userId, reportId, alias]
+  );
+
+  return alias;
+}
+
+// ✅ Lấy danh sách bình luận
 exports.getCommentsByReport = async (req, res) => {
   const { reportId } = req.params;
   try {
-    const [rows] = await db.query(
-      'SELECT * FROM comments WHERE reportId = ? ORDER BY createdAt DESC',
+    const [comments] = await db.query(
+      "SELECT * FROM comments WHERE reportId = ? ORDER BY createdAt DESC",
       [reportId]
     );
-    res.json(rows);
+    res.json(comments);
   } catch (err) {
-    console.error('❌ Lỗi lấy bình luận:', err);
-    res.status(500).json({ message: 'Lỗi server!' });
+    console.error("❌ getCommentsByReport error:", err);
+    res.status(500).json({ message: "Lỗi server!" });
   }
 };
 
-// Gửi bình luận mới
+// ✅ Tạo bình luận mới
 exports.createComment = async (req, res) => {
   const { reportId, userId, content } = req.body;
-  const commentId = uuidv4();
+  if (!reportId || !userId || !content?.trim())
+    return res.status(400).json({ message: "Thiếu thông tin!" });
+
+  const id = uuidv4();
 
   try {
-    // Kiểm tra alias đã có chưa
-    const [aliasRows] = await db.query(
-      'SELECT alias FROM anonymous_aliases WHERE userId = ? AND reportId = ? LIMIT 1',
-      [userId, reportId]
-    );
-
-    let alias = aliasRows[0]?.alias;
-    if (!alias) {
-      alias = await getUnusedAlias(reportId);
-      await db.query(
-        'INSERT INTO anonymous_aliases (id, userId, reportId, alias) VALUES (?, ?, ?, ?)',
-        [uuidv4(), userId, reportId, alias]
-      );
-    }
+    const alias = await ensureAlias(userId, reportId);
 
     await db.query(
-      `INSERT INTO comments (id, reportId, userId, userName, content, likes, replies)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        commentId,
-        reportId,
-        userId,
-        alias,
-        content,
-        JSON.stringify([]),
-        JSON.stringify([]),
-      ]
+      `INSERT INTO comments (id, reportId, userId, alias, content, likes, replies, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [id, reportId, userId, alias, content, "[]", "[]"]
     );
 
-    res.status(201).json({ message: 'Đã bình luận!', id: commentId, alias });
+    res.status(201).json({ message: "Đã bình luận!", id, alias });
   } catch (err) {
-    console.error('❌ Lỗi tạo bình luận:', err);
-    res.status(500).json({ message: 'Lỗi server!' });
+    console.error("❌ createComment error:", err);
+    res.status(500).json({ message: "Lỗi server!" });
   }
 };
 
-// Like hoặc Unlike bình luận
+// ✅ Like hoặc Unlike bình luận
 exports.toggleLike = async (req, res) => {
   const { commentId } = req.params;
   const { userId } = req.body;
 
   try {
-    const [rows] = await db.query('SELECT likes FROM comments WHERE id = ?', [commentId]);
-    if (rows.length === 0) return res.status(404).json({ message: 'Không tìm thấy comment!' });
+    const [[row]] = await db.query("SELECT likes FROM comments WHERE id = ?", [commentId]);
+    if (!row) return res.status(404).json({ message: "Không tìm thấy bình luận!" });
 
-    let likes = JSON.parse(rows[0].likes || '[]');
+    let likes = [];
+    try {
+      likes = JSON.parse(row.likes || "[]");
+    } catch (e) {
+      console.warn("❗ Parse likes error:", e);
+    }
+
     if (likes.includes(userId)) {
       likes = likes.filter(id => id !== userId);
     } else {
       likes.push(userId);
     }
 
-    await db.query('UPDATE comments SET likes = ? WHERE id = ?', [JSON.stringify(likes), commentId]);
-    res.json({ message: 'Đã cập nhật like.', likes });
+    await db.query("UPDATE comments SET likes = ? WHERE id = ?", [JSON.stringify(likes), commentId]);
+    res.json({ message: "Cập nhật like thành công!", likes });
   } catch (err) {
-    console.error('❌ Lỗi like comment:', err);
-    res.status(500).json({ message: 'Lỗi server!' });
+    console.error("❌ toggleLike error:", err);
+    res.status(500).json({ message: "Lỗi server!" });
   }
 };
 
-// Gửi phản hồi
+// ✅ Trả lời bình luận
 exports.replyToComment = async (req, res) => {
   const { commentId } = req.params;
   const { userId, content } = req.body;
 
+  if (!content?.trim())
+    return res.status(400).json({ message: "Nội dung phản hồi không hợp lệ!" });
+
   try {
-    const [[commentRow]] = await db.query('SELECT reportId FROM comments WHERE id = ?', [commentId]);
-    const reportId = commentRow?.reportId;
-    if (!reportId) return res.status(404).json({ message: 'Không tìm thấy comment!' });
+    const [[row]] = await db.query("SELECT reportId, replies FROM comments WHERE id = ?", [commentId]);
+    if (!row) return res.status(404).json({ message: "Không tìm thấy bình luận!" });
 
-    const [[aliasRow]] = await db.query(
-      'SELECT alias FROM anonymous_aliases WHERE userId = ? AND reportId = ?',
-      [userId, reportId]
-    );
-    const alias = aliasRow?.alias || `Người ẩn danh #${Math.floor(Math.random() * 10000)}`;
+    const alias = await ensureAlias(userId, row.reportId);
 
-    const [rows] = await db.query('SELECT replies FROM comments WHERE id = ?', [commentId]);
-    if (rows.length === 0) return res.status(404).json({ message: 'Không tìm thấy comment!' });
+    let replies = [];
+    try {
+      replies = JSON.parse(row.replies || "[]");
+    } catch (e) {
+      console.warn("❗ Parse replies error:", e);
+    }
 
-    const replies = JSON.parse(rows[0].replies || '[]');
     replies.push({
       userId,
       userName: alias,
@@ -124,46 +133,46 @@ exports.replyToComment = async (req, res) => {
       createdAt: new Date().toISOString()
     });
 
-    await db.query('UPDATE comments SET replies = ? WHERE id = ?', [JSON.stringify(replies), commentId]);
-    res.json({ message: 'Đã phản hồi!', replies });
+    await db.query("UPDATE comments SET replies = ? WHERE id = ?", [JSON.stringify(replies), commentId]);
+    res.json({ message: "Đã phản hồi!", replies });
   } catch (err) {
-    console.error('❌ Lỗi reply comment:', err);
-    res.status(500).json({ message: 'Lỗi server!' });
+    console.error("❌ replyToComment error:", err);
+    res.status(500).json({ message: "Lỗi server!" });
   }
 };
 
-// Xoá bình luận
+// ✅ Xoá bình luận
 exports.deleteComment = async (req, res) => {
   const { commentId } = req.params;
   try {
-    const [result] = await db.query('DELETE FROM comments WHERE id = ?', [commentId]);
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Không tìm thấy bình luận!' });
-    }
-    res.json({ message: 'Đã xoá bình luận!' });
+    const [result] = await db.query("DELETE FROM comments WHERE id = ?", [commentId]);
+    if (result.affectedRows === 0)
+      return res.status(404).json({ message: "Không tìm thấy bình luận!" });
+
+    res.json({ message: "Đã xoá bình luận!" });
   } catch (err) {
-    console.error('❌ Lỗi xoá comment:', err);
-    res.status(500).json({ message: 'Lỗi server!' });
+    console.error("❌ deleteComment error:", err);
+    res.status(500).json({ message: "Lỗi server!" });
   }
 };
 
-// Xoá phản hồi
+// ✅ Xoá phản hồi
 exports.deleteReply = async (req, res) => {
   const { commentId, replyIndex } = req.params;
   try {
-    const [rows] = await db.query('SELECT replies FROM comments WHERE id = ?', [commentId]);
-    if (rows.length === 0) return res.status(404).json({ message: 'Không tìm thấy comment!' });
+    const [[row]] = await db.query("SELECT replies FROM comments WHERE id = ?", [commentId]);
+    if (!row) return res.status(404).json({ message: "Không tìm thấy bình luận!" });
 
-    const replies = JSON.parse(rows[0].replies || '[]');
-    if (replyIndex < 0 || replyIndex >= replies.length) {
-      return res.status(400).json({ message: 'Chỉ số phản hồi không hợp lệ!' });
-    }
+    const replies = JSON.parse(row.replies || "[]");
+    if (replyIndex < 0 || replyIndex >= replies.length)
+      return res.status(400).json({ message: "Chỉ số phản hồi không hợp lệ!" });
 
     replies.splice(replyIndex, 1);
-    await db.query('UPDATE comments SET replies = ? WHERE id = ?', [JSON.stringify(replies), commentId]);
-    res.json({ message: 'Đã xoá phản hồi!', replies });
+    await db.query("UPDATE comments SET replies = ? WHERE id = ?", [JSON.stringify(replies), commentId]);
+
+    res.json({ message: "Đã xoá phản hồi!", replies });
   } catch (err) {
-    console.error('❌ Lỗi xoá phản hồi:', err);
-    res.status(500).json({ message: 'Lỗi server!' });
+    console.error("❌ deleteReply error:", err);
+    res.status(500).json({ message: "Lỗi server!" });
   }
 };

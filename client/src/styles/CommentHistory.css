@@ -1,44 +1,135 @@
-.status-filter {
-    margin-bottom: 20px;
-  }
-  
-  .status-filter button {
-    margin-right: 10px;
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    background: white;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .status-filter .active {
-    background-color: black;
-    color: white;
-  }
-  
-  .comment-list {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .comment-list li {
-    background: white;
-    padding: 20px;
-    margin-bottom: 16px;
-    border-radius: 8px;
-    box-shadow: 0 0 4px rgba(0,0,0,0.05);
-    cursor: pointer;
-  }
-  
-  .comment-list li:hover {
-    background-color: #f9f9f9;
-  }
-  
-  .comment-list .meta {
-    font-size: 14px;
-    color: #555;
-    display: flex;
-    justify-content: space-between;
-    margin-top: 8px;
-  }
-  
+.comment-section {
+  margin-top: 20px;
+  padding: 10px;
+  font-family: Arial, sans-serif;
+}
+
+.comment-title {
+  font-size: 1.2em;
+  margin-top: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+.comment-item {
+  border-bottom: 1px solid #ddd;
+  padding: 10px 0;
+}
+
+.comment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 5px;
+}
+
+.comment-time,
+.reply-time {
+  display: flex;
+  align-items: center;
+  color: #888;
+}
+
+.comment-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9em;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.comment-btn:hover {
+  background: #f0f0f0;
+}
+
+.comment-btn.reply {
+  color: #007bff;
+}
+
+.comment-btn.delete {
+  color: red;
+  font-weight: bold;
+}
+
+.comment-btn.like {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.comment-btn.see-more {
+  margin-top: 5px;
+  color: #555;
+  font-style: italic;
+}
+
+.comment-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #eee;
+  object-fit: cover;
+}
+
+.reply-list {
+  margin-left: 20px;
+  margin-top: 10px;
+}
+
+.reply-item {
+  padding: 8px 10px;
+  background: #f9f9f9;
+  border-left: 3px solid #ddd;
+  margin-bottom: 5px;
+  border-radius: 5px;
+}
+
+.reply-box {
+  margin-top: 10px;
+}
+
+.reply-input {
+  width: 100%;
+  resize: vertical;
+  padding: 6px;
+  font-size: 0.9em;
+  margin-bottom: 5px;
+}
+
+.comment-input {
+  width: 100%;
+  resize: vertical;
+  padding: 6px;
+  margin-top: 5px;
+  font-size: 1em;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 20px;
+}
+
+.pagination button {
+  border: 1px solid #ccc;
+  background: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination button:hover {
+  background: #f2f2f2;
+}
+
+.pagination button.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
