@@ -165,7 +165,6 @@ export default function Header() {
             <Link to="/check-account">Tra cứu STK</Link>
             <Link to="/check-website">Tra cứu Website</Link>
             <a className="nav-link" onClick={() => handleProtectedClick("/report")}>Gửi tố cáo</a>
-            <a className="nav-link" onClick={() => navigate("/ai-analysis")}>AI phân tích WEB</a>
 
             {user.isLoggedIn ? (
               <>

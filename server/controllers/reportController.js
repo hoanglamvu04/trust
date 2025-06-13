@@ -4,12 +4,16 @@ const { v4: uuidv4 } = require('uuid');
 // Lấy tất cả báo cáo (mới nhất trước)
 exports.getAllReports = async (req, res) => {
   try {
-    const [rows] = await db.query(`
-      SELECT DISTINCT r.*, u.name AS userName 
+   const [rows] = await db.query(`
+    SELECT * FROM (
+      SELECT r.*, u.name AS userName
       FROM reports r 
       LEFT JOIN users u ON r.userId = u.id 
       ORDER BY r.createdAt DESC
-    `);
+    ) AS sub
+    GROUP BY sub.id
+
+  `);
     res.json(rows);
   } catch (err) {
     console.error('❌ Lỗi lấy danh sách báo cáo:', err);
@@ -114,6 +118,18 @@ exports.updateReportContent = async (req, res) => {
     res.json({ message: 'Cập nhật báo cáo thành công.' });
   } catch (err) {
     console.error('❌ Lỗi cập nhật báo cáo:', err);
+    res.status(500).json({ message: 'Lỗi server!' });
+  }
+};
+
+// Tăng lượt xem
+exports.incrementViews = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query('UPDATE reports SET views = views + 1 WHERE id = ?', [id]);
+    res.json({ message: 'Đã tăng lượt xem!' });
+  } catch (err) {
+    console.error("❌ Lỗi tăng lượt xem:", err);
     res.status(500).json({ message: 'Lỗi server!' });
   }
 };

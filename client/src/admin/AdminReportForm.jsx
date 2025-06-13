@@ -17,7 +17,7 @@ export default function AdminReportForm() {
   const [form, setForm] = useState({
     accountName: "", accountNumber: "", bank: "", facebookLink: "",
     content: "", reporterName: "", zalo: "", confirm: "",
-    category: categories[0], proofs: [], userId: null, status: "approved"
+    category: categories[0], proofs: [], status: "approved"
   });
 
   const [proofURLs, setProofURLs] = useState([]);
@@ -77,7 +77,12 @@ export default function AdminReportForm() {
         ? `http://localhost:5000/api/admin/reports/${id}`
         : "http://localhost:5000/api/admin/reports";
 
-      const res = await fetch(url, { method, body: formData });
+      const res = await fetch(url, {
+        method,
+        body: formData,
+        credentials: "include", 
+      });
+
       const json = await res.json();
       if (json.success) {
         alert(id ? "✅ Đã cập nhật!" : "✅ Đã thêm mới!");
@@ -99,11 +104,11 @@ export default function AdminReportForm() {
         <div className="adm-form-row">
           <div className="adm-form-group">
             <label>Tên chủ tài khoản *</label>
-            <input name="accountName" value={form.accountName} onChange={handleChange} required disabled={!editMode} />
+            <input name="accountName" value={form.accountName} onChange={handleChange} required readOnly={!editMode} />
           </div>
           <div className="adm-form-group">
             <label>Số tài khoản *</label>
-            <input name="accountNumber" value={form.accountNumber} onChange={handleChange} required disabled={!editMode} />
+            <input name="accountNumber" value={form.accountNumber} onChange={handleChange} required readOnly={!editMode} />
           </div>
         </div>
 
@@ -125,7 +130,7 @@ export default function AdminReportForm() {
         <div className="adm-form-row">
           <div className="adm-form-group">
             <label>Người tố cáo *</label>
-            <input name="reporterName" value={form.reporterName} onChange={handleChange} required disabled={!editMode} />
+            <input name="reporterName" value={form.reporterName} onChange={handleChange} required readOnly={!editMode} />
           </div>
           <div className="adm-form-group">
             <label>Zalo</label>
@@ -142,7 +147,7 @@ export default function AdminReportForm() {
 
         <div className="adm-form-group">
           <label>Nội dung tố cáo *</label>
-          <textarea name="content" value={form.content} onChange={handleChange} required disabled={!editMode} />
+          <textarea name="content" value={form.content} onChange={handleChange} required readOnly={!editMode} />
         </div>
 
         <div className="adm-form-group">

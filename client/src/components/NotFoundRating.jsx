@@ -8,11 +8,15 @@ export default function NotFoundRating({ account }) {
   const [labels, setLabels] = useState([]);
   const [searchStats, setSearchStats] = useState({ today: 0, yesterday: 0, last7days: 0, last30days: 0 });
 
-  const localKey = `rating_${account}`;
-
   const colorMap = { 1: "red", 2: "orange", 3: "yellow", 4: "blue", 5: "green" };
 
-  // Fetch labels & trạng thái vote
+  // 🟡 Tách riêng hàm loadLocalVote
+  const loadLocalVote = (accountNumber) => {
+    const saved = localStorage.getItem(`rating_${accountNumber}`);
+    setSelectedRating(saved ? parseInt(saved) : 0);
+  };
+
+  // 🟢 Khi account thay đổi, fetch lại dữ liệu
   useEffect(() => {
     const fetchLabels = async () => {
       try {
@@ -33,17 +37,21 @@ export default function NotFoundRating({ account }) {
         console.error("API ratings error:", err);
       }
     };
-    fetchLabels();
 
-    const saved = localStorage.getItem(localKey);
-    if (saved) setSelectedRating(parseInt(saved));
+    fetchLabels();
+    loadLocalVote(account); // 🟢 Gọi lại khi account đổi
   }, [account]);
 
+  // 🟢 Thống kê lượt tìm kiếm
   useEffect(() => {
     const fetchStats = async () => {
-      const res = await fetch(`http://localhost:5000/api/searchlog/stats?account=${account}`);
-      const data = await res.json();
-      setSearchStats(data);
+      try {
+        const res = await fetch(`http://localhost:5000/api/searchlog/stats?account=${account}`);
+        const data = await res.json();
+        setSearchStats(data);
+      } catch (err) {
+        console.error("Lỗi lấy search stats:", err);
+      }
     };
     fetchStats();
   }, [account]);
@@ -52,20 +60,17 @@ export default function NotFoundRating({ account }) {
     let newLabels = [...labels];
 
     if (selectedRating === num) {
-      // 🟢 Hủy vote
       newLabels = newLabels.map((item) =>
         item.star === num ? { ...item, count: Math.max(0, item.count - 1) } : item
       );
       setSelectedRating(0);
-      localStorage.removeItem(localKey);
-
+      localStorage.removeItem(`rating_${account}`);
       await fetch(`http://localhost:5000/api/ratings/${account}/unvote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: num })
       });
     } else {
-      // 🟢 Vote mới
       newLabels = newLabels.map((item) => {
         if (item.star === selectedRating) {
           return { ...item, count: Math.max(0, item.count - 1) };
@@ -76,7 +81,7 @@ export default function NotFoundRating({ account }) {
         return item;
       });
       setSelectedRating(num);
-      localStorage.setItem(localKey, num);
+      localStorage.setItem(`rating_${account}`, num);
 
       if (selectedRating !== 0) {
         await fetch(`http://localhost:5000/api/ratings/${account}/unvote`, {
@@ -92,6 +97,7 @@ export default function NotFoundRating({ account }) {
         body: JSON.stringify({ rating: num })
       });
     }
+
     setLabels(newLabels);
   };
 

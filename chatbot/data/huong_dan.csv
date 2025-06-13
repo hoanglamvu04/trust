@@ -1,0 +1,17 @@
+﻿Column1,Column2,Column3
+label,example,response
+hd_dang_bai,Làm sao để đăng bài tố cáo?,Chị vào mục 'Gửi tố cáo' rồi điền đầy đủ thông tin để đăng bài tố cáo.
+hd_dang_bai,Tôi muốn đăng cảnh báo thì vào đâu?,Mục đăng bài nằm ngay bên dưới khung tra cứu STK.
+hd_dang_bai,Đăng bài mới như thế nào?,Click nút 'Gửi tố cáo' màu đỏ trên trang chủ để tạo bài viết mới.
+hd_binh_luan,Bình luận dưới bài viết ở đâu?,Phía dưới mỗi cảnh báo đều có khung bình luận.
+hd_binh_luan,Muốn trả lời người khác thì làm sao?,Ấn vào 'Trả lời' bên dưới bình luận đó.
+hd_binh_luan,Có thể chỉnh sửa bình luận không?,Hiện tại chưa hỗ trợ chỉnh sửa bình luận sau khi gửi.
+hd_danh_gia,Tôi muốn đánh giá bài viết,Chị có thể đánh giá bằng cách click vào các ngôi sao dưới bài viết.
+hd_danh_gia,Chấm sao bài viết ở đâu?,Ngay dưới bài cảnh báo có mục 'Đánh giá bài viết'.
+hd_danh_gia,Đánh giá có bị ẩn không?,Lượt đánh giá được công khai bên dưới bài đăng.
+hd_chi_tiet,Chi tiết cảnh báo là gì?,"Chi tiết gồm: tên tố cáo, số tài khoản, mô tả, hình ảnh (nếu có)."
+hd_chi_tiet,Xem hình ảnh tố cáo ở đâu?,Chị click vào tiêu đề bài viết để xem toàn bộ nội dung.
+hd_chi_tiet,Cảnh báo có nội dung gì?,"Thông tin cảnh báo sẽ gồm mô tả, người gửi, thời gian và số lượt cảnh báo."
+hd_tai_khoan,Tạo tài khoản kiểu gì?,Chị vào mục 'Đăng nhập' rồi chọn tạo tài khoản mới.
+hd_tai_khoan,Đăng nhập bằng Zalo được không?,"Hiện hệ thống chỉ hỗ trợ đăng nhập qua tài khoản hệ thống, chưa tích hợp Zalo."
+hd_tai_khoan,Tôi bị lỗi khi đăng nhập,"Nếu bị lỗi, chị thử tải lại trang hoặc liên hệ admin để được hỗ trợ."

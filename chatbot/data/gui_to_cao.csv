@@ -1,0 +1,22 @@
+﻿Column1,Column2,Column3
+label,example,response
+cach_gui,Làm sao để gửi tố cáo?,Chị ấn nút 'Gửi tố cáo' trên trang chủ rồi điền form.
+cach_gui,Muốn tố cáo ai đó thì làm sao?,Chị vào Gửi Tố Cáo và cung cấp thông tin cần thiết nhé.
+cach_gui,Tôi cần tố cáo một người,Dạ chị bấm Gửi Tố Cáo và đính kèm thông tin liên quan ạ.
+cach_gui,Gửi tố cáo như nào vậy?,"Mình chọn Gửi tố cáo, điền nội dung và ảnh nếu có."
+huong_dan_anh,Tôi muốn gửi ảnh minh chứng,Chị có thể đính kèm ảnh trong phần gửi tố cáo.
+huong_dan_anh,Ảnh chứng minh gửi ở đâu?,Ngay trong form gửi tố cáo có phần đính kèm ảnh nhé chị.
+huong_dan_anh,Có cần ảnh không?,Khuyến khích chị gửi ảnh để tăng độ tin cậy của tố cáo.
+quy_trinh,Sau khi gửi tố cáo thì sao?,Đơn tố cáo sẽ được kiểm duyệt trong vòng 24h.
+quy_trinh,Tố cáo xong có duyệt không?,"Dạ có, tố cáo hợp lệ sẽ được duyệt và hiển thị công khai."
+quy_trinh,Ai xử lý đơn tố cáo vậy?,Bộ phận kiểm duyệt sẽ xác minh và duyệt tố cáo.
+quy_trinh,Duyệt tố cáo mất bao lâu?,"Thông thường 24h làm việc, tối đa 3 ngày ạ."
+quy_trinh,Tôi muốn hủy đơn tố cáo,Chị liên hệ Admin để yêu cầu gỡ đơn nếu cần.
+tra_cuu_tinh_trang,Kiểm tra đơn tố cáo,Chị vào 'Lịch sử tố cáo' để theo dõi tình trạng.
+tra_cuu_tinh_trang,Đơn của tôi xử lý tới đâu rồi,Chị xem mục 'Lịch sử tố cáo' để biết tiến độ xử lý.
+tra_cuu_tinh_trang,Tôi tra cứu tố cáo thế nào?,Chị truy cập vào lịch sử hoặc hỏi trực tiếp hệ thống.
+tra_cuu_tinh_trang,Biết tình trạng đơn tố cáo không?,"Dạ có, chị tra tại mục 'Lịch sử tố cáo' nhé."
+cach_gui,Tố cáo bằng cách nào?,Chị bấm nút Gửi tố cáo và điền thông tin theo mẫu.
+huong_dan_anh,Tôi có ảnh chụp màn hình,"Rất tốt ạ, chị đính kèm ảnh đó vào khi gửi tố cáo."
+quy_trinh,Tố cáo xong được gì?,"Nếu đơn hợp lệ, hệ thống sẽ hiển thị cảnh báo công khai."
+tra_cuu_tinh_trang,Tra cứu tố cáo bằng số nào?,"Dạ mình tra theo nội dung, SĐT hoặc Zalo gửi đơn."

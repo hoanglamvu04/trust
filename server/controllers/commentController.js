@@ -36,7 +36,7 @@ async function ensureAlias(userId, reportId) {
   return alias;
 }
 
-// ✅ Lấy danh sách bình luận
+// ✅ Lấy bình luận theo report
 exports.getCommentsByReport = async (req, res) => {
   const { reportId } = req.params;
   try {
@@ -53,9 +53,15 @@ exports.getCommentsByReport = async (req, res) => {
 
 // ✅ Tạo bình luận mới
 exports.createComment = async (req, res) => {
-  const { reportId, userId, content } = req.body;
-  if (!reportId || !userId || !content?.trim())
+  const rawUserId = req.body.userId;
+  const userId = Array.isArray(rawUserId) ? rawUserId[0] : rawUserId;
+
+  const reportId = req.body.reportId; // ✅ Bổ sung dòng này
+  const content = req.body.content;
+
+  if (!reportId || !userId || !content?.trim()) {
     return res.status(400).json({ message: "Thiếu thông tin!" });
+  }
 
   const id = uuidv4();
 
@@ -75,7 +81,8 @@ exports.createComment = async (req, res) => {
   }
 };
 
-// ✅ Like hoặc Unlike bình luận
+
+// ✅ Like hoặc Unlike
 exports.toggleLike = async (req, res) => {
   const { commentId } = req.params;
   const { userId } = req.body;
@@ -176,3 +183,28 @@ exports.deleteReply = async (req, res) => {
     res.status(500).json({ message: "Lỗi server!" });
   }
 };
+
+exports.getCommentsByUser = async (req, res) => {
+  console.log("📦 SESSION:", req.session);
+  console.log("📦 req.session.user:", req.session?.user);
+  console.log("📦 req.user (from JWT):", req.user);
+
+  const userId = req.session?.user?.id || req.user?.id;
+
+  if (!userId) {
+    console.warn("🚫 Không có userId để truy vấn bình luận!");
+    return res.status(401).json({ message: "Chưa đăng nhập!" });
+  }
+
+  try {
+    const [comments] = await db.query(
+      "SELECT * FROM comments WHERE userId = ? ORDER BY createdAt DESC",
+      [userId]
+    );
+    res.json(comments);
+  } catch (err) {
+    console.error("❌ getCommentsByUser error:", err);
+    res.status(500).json({ message: "Lỗi server!" });
+  }
+};
+

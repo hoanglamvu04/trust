@@ -1,30 +1,40 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 
-import App from './App'
-import CheckAccount from './pages/CheckAccount'
-import ReportDetail from './pages/ReportDetail'
-import Profile from "./pages/Profile";
-import ReportHistory from "./pages/ReportHistory";
-import CommentHistory from "./pages/CommentHistory";
-import Report from "./pages/Report";
-import Contact from "./pages/Contact";
-import AdminLayout from "./admin/AdminLayout";
-import Dashboard from "./admin/Dashboard";
-import ManageUsers from "./admin/ManageUsers";
-import ManageComments from "./admin/ManageComments";
-import ManageContacts from "./admin/ManageContacts";
-import ManageReports from "./admin/ManageReports";
-import AdminReportForm from "./admin/AdminReportForm ";
-import AdminGuard from "./admin/AdminGuard";
+// Pages
+import App from './App';
+import CheckAccount from './pages/CheckAccount';
+import ReportDetail from './pages/ReportDetail';
+import Profile from './pages/Profile';
+import ReportHistory from './pages/ReportHistory';
+import CommentHistory from './pages/CommentHistory';
+import Report from './pages/Report';
+import Contact from './pages/Contact';
 import CheckWebsite from './pages/CheckWebsite';
-import AiAnalysis from "./pages/AiAnalysis";
-import AIGptAnalysis from "./pages/AIGptAnalysis";
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <BrowserRouter>
+// Admin Pages
+import AdminLayout from './admin/AdminLayout';
+import Dashboard from './admin/Dashboard';
+import ManageUsers from './admin/ManageUsers';
+import ManageComments from './admin/ManageComments';
+import ManageContacts from './admin/ManageContacts';
+import ManageReports from './admin/ManageReports';
+import AdminReportForm from './admin/AdminReportForm';
+import AdminGuard from './admin/AdminGuard';
+
+// Components
+import ChatbotModal from './components/ChatbotModal';
+import ChatbotLauncher from './components/ChatbotLauncher';
+
+// Wrapper for chatbot logic
+function AppWithChatbot() {
+  const location = useLocation();
+  const [chatbotOpen, setChatbotOpen] = React.useState(false);
+  const hideChatbot = location.pathname.startsWith('/admin');
+
+  return (
+    <>
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/check-account" element={<CheckAccount />} />
@@ -34,9 +44,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/comment-history" element={<CommentHistory />} />
         <Route path="/report" element={<Report />} />
         <Route path="/contact" element={<Contact />} />
-       <Route path="/admin" element={
-          <AdminGuard><AdminLayout /></AdminGuard>
-        }>
+        <Route path="/check-website" element={<CheckWebsite />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<ManageUsers />} />
           <Route path="comments" element={<ManageComments />} />
@@ -45,10 +56,24 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="reports/new" element={<AdminReportForm />} />
           <Route path="reports/:id" element={<AdminReportForm />} />
         </Route>
-        <Route path="/check-website" element={<CheckWebsite />} />
-        <Route path="/ai-analysis" element={<AiAnalysis />} />
-          <Route path="/ai-gpt-analysis" element={<AIGptAnalysis />} />
       </Routes>
+
+      {/* Chatbot */}
+      {!hideChatbot && (
+        <>
+          <ChatbotLauncher onClick={() => setChatbotOpen(true)} />
+          {chatbotOpen && <ChatbotModal open={chatbotOpen} onClose={() => setChatbotOpen(false)} />}
+        </>
+      )}
+    </>
+  );
+}
+
+// Mount to DOM
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <AppWithChatbot />
     </BrowserRouter>
   </React.StrictMode>
-)
+);

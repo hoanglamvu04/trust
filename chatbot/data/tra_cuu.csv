@@ -1,0 +1,22 @@
+﻿Column1,Column2,Column3
+label,example,response
+tra_cuu_stk,Tôi muốn kiểm tra tài khoản 123456789,Vui lòng nhập số tài khoản cần tra cứu.
+tra_cuu_stk,Check hộ tôi STK này với,Chị vui lòng gửi số tài khoản cần kiểm tra ạ.
+tra_cuu_stk,Tra STK xem có bị tố cáo không,"Dạ, chị gửi STK để em kiểm tra giúp nhé."
+tra_cuu_stk,Số tài khoản này có lừa đảo không,Mình gửi STK để hệ thống kiểm tra giúp chị nhé.
+tra_cuu_web,Kiểm tra hộ tôi trang web này,Chị gửi đường dẫn website để hệ thống phân tích nhé.
+tra_cuu_web,Check url này có đáng tin không?,Vui lòng cung cấp link website để kiểm tra độ an toàn.
+tra_cuu_web,Web này có bị cảnh báo không?,Chị gửi link để kiểm tra tình trạng cảnh báo ạ.
+tra_cuu_web,Tra cứu website lừa đảo,Hệ thống sẽ kiểm tra khi chị gửi link website cần tra cứu.
+tra_cuu_web,Check giùm trang này: abc.com,"Dạ, chị gửi đường link website cần phân tích giúp em ạ."
+tra_cuu_stk,STK này có an toàn không?,"Em sẽ kiểm tra giúp, chị gửi số tài khoản nhé."
+tra_cuu_stk,Mình muốn biết tài khoản này có bị tố cáo không,Chị cung cấp STK để em kiểm tra ạ.
+tra_cuu_stk,Gửi STK để kiểm tra,"Vâng, chị gửi STK để hệ thống xử lý."
+tra_cuu_web,Link web có dấu hiệu gì lạ không,Vui lòng gửi link để hệ thống đánh giá.
+tra_cuu_web,Web có độc không?,Chị gửi link giúp em để kiểm tra nguy cơ nhé.
+tra_cuu_web,Trang này giả mạo không?,"Gửi link website, hệ thống sẽ phân tích mức độ rủi ro."
+tra_cuu_web,Kiểm tra website abc.vn,Chị vui lòng gửi website đầy đủ để kiểm tra.
+tra_cuu_web,Cần kiểm tra trang fake news,Gửi link cần kiểm tra để em xử lý nhé.
+tra_cuu_stk,Kiểm tra STK này,"Dạ, chị gửi STK để kiểm tra nhé."
+tra_cuu_stk,STK lừa đảo hay không?,Vui lòng gửi số tài khoản để kiểm tra cảnh báo.
+tra_cuu_web,Trang này có đáng tin không?,Hệ thống sẽ phân tích khi có link website chị gửi.

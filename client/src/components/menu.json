@@ -1,0 +1,103 @@
+[
+  {
+    "id": "root",
+    "reply": "Chị cần hỗ trợ về nội dung nào?",
+    "groups": [
+      {
+        "title": "",
+        "items": [
+          { "label": "Tra cứu", "nextId": "tra_cuu" },
+          { "label": "Gửi tố cáo", "nextId": "gui_to_cao" },
+          { "label": "Hướng dẫn sử dụng", "nextId": "huong_dan" },
+          { "label": "Liên hệ / Hỏi đáp", "nextId": "lien_he" },
+          { "label": "Thông tin về TrustCheck", "nextId": "gioi_thieu" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tra_cuu",
+    "reply": "Chị muốn tra cứu gì?",
+    "groups": [
+      {
+        "title": "Tra cứu",
+        "items": [
+          { "label": "Tra cứu STK", "nextId": "tra_cuu_stk" },
+          { "label": "Tra cứu website", "nextId": "tra_cuu_web" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "gui_to_cao",
+    "reply": "Chị cần hỗ trợ gì trong việc gửi tố cáo?",
+    "groups": [
+      {
+        "title": "Gửi tố cáo",
+        "items": [
+          { "label": "Cách gửi tố cáo", "nextId": "cach_gui" },
+          { "label": "Hướng dẫn đính kèm ảnh chứng minh", "nextId": "huong_dan_anh" },
+          { "label": "Quy trình duyệt tố cáo", "nextId": "quy_trinh" },
+          { "label": "Tra cứu tình trạng đơn tố cáo", "nextId": "tra_cuu_tinh_trang" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "huong_dan",
+    "reply": "Chọn mục cần hỗ trợ",
+    "groups": [
+      {
+        "title": "Hướng dẫn sử dụng",
+        "items": [
+          { "label": "Đăng bài tố cáo", "nextId": "hd_dang_bai" },
+          { "label": "Bình luận / Phản hồi", "nextId": "hd_binh_luan" },
+          { "label": "Hệ thống đánh giá", "nextId": "hd_danh_gia" },
+          { "label": "Xem chi tiết cảnh báo", "nextId": "hd_chi_tiet" },
+          { "label": "Cách tạo tài khoản / đăng nhập", "nextId": "hd_tai_khoan" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "lien_he",
+    "reply": "Chị muốn liên hệ với bộ phận nào?",
+    "groups": [
+      {
+        "title": "Liên hệ / Hỏi đáp",
+        "items": [
+          { "label": "Admin xử lý tố cáo", "nextId": "lh_admin" },
+          { "label": "Gửi email hỗ trợ", "nextId": "lh_email" },
+          { "label": "Thời gian phản hồi trung bình", "nextId": "lh_thoi_gian" },
+          { "label": "Kênh Zalo / Messenger", "nextId": "lh_zalo" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "gioi_thieu",
+    "reply": "Chị muốn tìm hiểu điều gì?",
+    "groups": [
+      {
+        "title": "Giới thiệu",
+        "items": [
+          { "label": "TrustCheck là gì?", "nextId": "gt_la_gi" },
+          { "label": "Nguyên tắc xác minh cảnh báo", "nextId": "gt_nguyen_tac" },
+          { "label": "Chính sách bảo mật", "nextId": "gt_bao_mat" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tra_cuu_stk",
+    "reply": "Vui lòng nhập số tài khoản cần tra cứu:",
+    "expectInput": "stk",
+    "keywords": ["tra cứu stk", "tra cứu tài khoản", "tra stk"]
+  },
+  {
+    "id": "tra_cuu_web",
+    "reply": "Vui lòng nhập địa chỉ website cần kiểm tra:",
+    "expectInput": "web",
+    "keywords": ["tra cứu web", "kiểm tra website", "check url"]
+  }
+]

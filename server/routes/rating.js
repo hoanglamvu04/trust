@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/ratingController');
 
-router.get('/:accountNumber', controller.getRatingByAccountNumber);
-router.post('/', controller.submitRating);
+router.get('/:account', controller.getRatingSummary);
+router.post('/:account', controller.vote);
+router.post('/:account/unvote', controller.unvote);
 
 module.exports = router;

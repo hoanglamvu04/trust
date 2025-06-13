@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 
-// Lấy danh sách reports (admin)
+// ✅ Lấy danh sách reports (admin)
 exports.getReports = async (req, res) => {
   const { search = "", status = "", page = 1 } = req.query;
   const limit = 30;
@@ -24,6 +24,7 @@ exports.getReports = async (req, res) => {
       )`);
       values.push(`%${search}%`, `%${search}%`);
     }
+
     const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const [countRows] = await db.query(`SELECT COUNT(*) AS total FROM reports ${whereClause}`, values);
     const total = countRows[0].total;
@@ -40,15 +41,19 @@ exports.getReports = async (req, res) => {
   }
 };
 
-// Tạo report mới (admin) — lưu ảnh vào thư mục riêng
+// ✅ Tạo report mới
 exports.createReport = async (req, res) => {
   try {
     const {
       accountName, accountNumber, bank, facebookLink, content,
-      reporterName, zalo, confirm, category, userId
+      reporterName, zalo, confirm, category
     } = req.body;
 
-    if (!accountName || !accountNumber || !bank || !content || !reporterName) {
+    // ✅ Lấy userId từ token hoặc session
+    const userId = req.user?.id || req.session?.user?.id;
+    console.log("📌 createReport - userId:", userId);
+
+    if (!userId || !accountName || !accountNumber || !bank || !content || !reporterName) {
       return res.status(400).json({ success: false, message: "Thiếu dữ liệu!" });
     }
 
@@ -61,7 +66,7 @@ exports.createReport = async (req, res) => {
       for (const file of req.files) {
         const dest = path.join(folder, file.originalname);
         fs.renameSync(file.path, dest);
-        proofUrls.push(file.originalname); // chỉ lưu tên file
+        proofUrls.push(file.originalname);
       }
     }
 
@@ -85,8 +90,7 @@ exports.createReport = async (req, res) => {
   }
 };
 
-// Cập nhật report (đã xử lý ảnh bị xóa + ảnh mới)
-// Cập nhật report (lưu ảnh mới đúng thư mục, xóa ảnh cũ bị loại bỏ)
+// ✅ Cập nhật report
 exports.updateReport = async (req, res) => {
   try {
     const { id } = req.params;
@@ -102,31 +106,25 @@ exports.updateReport = async (req, res) => {
     const folder = path.join(__dirname, "..", "uploads", "reports", id);
     if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
 
-    // Load các ảnh cũ đang lưu trong CSDL
     const [rows] = await db.query("SELECT proof FROM reports WHERE id = ?", [id]);
     const existingProofs = rows[0]?.proof ? JSON.parse(rows[0].proof) : [];
 
-    // 1. Xoá các ảnh cũ bị người dùng xóa
     for (const filename of deleted) {
       const filePath = path.join(folder, filename);
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     }
 
-    // 2. Lọc ảnh cũ còn giữ lại
     const keptProofs = existingProofs.filter(name => !deleted.includes(name));
 
-    // 3. Di chuyển ảnh mới từ tmp vào thư mục /reports/:id/
     const newProofs = [];
     for (const file of uploadedFiles) {
       const destPath = path.join(folder, file.originalname);
       fs.renameSync(file.path, destPath);
-      newProofs.push(file.originalname); // chỉ lưu tên file
+      newProofs.push(file.originalname);
     }
 
-    // 4. Gộp lại danh sách ảnh
     const finalProofs = [...keptProofs, ...newProofs];
 
-    // 5. Cập nhật CSDL
     await db.query(
       `UPDATE reports SET 
         accountName = ?, accountNumber = ?, bank = ?, facebookLink = ?,
@@ -147,8 +145,7 @@ exports.updateReport = async (req, res) => {
   }
 };
 
-
-// Xoá report + ảnh
+// ✅ Xoá report
 exports.deleteReport = async (req, res) => {
   const { id } = req.params;
   try {
@@ -163,7 +160,7 @@ exports.deleteReport = async (req, res) => {
   }
 };
 
-// Duyệt / từ chối report
+// ✅ Duyệt / từ chối report
 exports.approveReport = async (req, res) => {
   const { id } = req.params;
   const { status, rejectionReason } = req.body;
@@ -180,7 +177,7 @@ exports.approveReport = async (req, res) => {
   }
 };
 
-// Xem chi tiết báo cáo
+// ✅ Xem chi tiết báo cáo
 exports.getReportById = async (req, res) => {
   const { id } = req.params;
   try {
@@ -192,4 +189,3 @@ exports.getReportById = async (req, res) => {
     res.status(500).json({ success: false, message: "Lỗi server!" });
   }
 };
-

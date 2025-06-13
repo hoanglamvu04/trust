@@ -7,5 +7,6 @@ router.get('/:id', controller.getReportById);
 router.post('/', controller.createReport);
 router.put('/:id/status', controller.updateReportStatus);
 router.put('/:id', controller.updateReportContent);
+router.patch('/:id/view', controller.incrementViews);
 
 module.exports = router;

@@ -18,7 +18,7 @@ export default function ReportHistory() {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/report/all");
+        const res = await fetch("http://localhost:5000/api/report");
         const data = await res.json();
         setReports(data);
       } catch (err) {

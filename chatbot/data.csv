@@ -1,22 +1,7 @@
-question,answer,processed
-Xin chào,Xin chào! Tôi có thể giúp gì cho bạn?,xin chào
-Bạn tên gì?,Tôi là ChatBot ML,bạn tên gì
-Bạn khỏe không?,Cảm ơn! Tôi luôn khỏe vì là AI mà,bạn khỏe không
-ngủ chưa,ko cần ngủ,ngủ chưa
-Ê,"Dạ, sao vậy ạ?",ê
-Ê Ê,Có tên tuổi đàng hoàng nha mày :),ê ê
-ê ê,Ê Ê,ê ê
-ê,không,ê
-tôi là ai,Bạn là Hoàng Lâm Vũ,tôi là ai
-giỏi,Quá khen ạ !!,giỏi
-bạn ơi,"Sao đấy? Tôi đây, có chuyện gì cứ nói !!",bạn ơi
-alo alo,ko,alo alo
-ko,Ý bạn là không hả?,ko
-Chuẩn,"Dạ vâng, em có thể giúp gì cho anh",chuẩn
-ê,Dạ sao ạ,ê
-ê,dm,ê
-ê,gì,ê
-ê,gì,ê
-ngoan,Em luôn ngoan mà,ngoan
-cơm,"Tôi không cần ăn cơm, cảm ơn !",cơm
-tôi tên,bạn tên Hoàng Lâm Vũ,
+question,answer,category
+Làm sao để lấy lại mật khẩu?,"Chị có thể vào mục ""Quên mật khẩu"" và làm theo hướng dẫn để đặt lại mật khẩu.",support
+Tôi muốn gửi tố cáo thì làm thế nào?,"Chị vào trang chủ, chọn “Gửi tố cáo”, điền đầy đủ thông tin và ảnh minh chứng rồi nhấn Gửi.",huong_dan
+Tài khoản 123456 có phải lừa đảo không?,Vui lòng nhập số tài khoản vào ô tìm kiếm để kiểm tra cảnh báo đã được xác minh.,canh_bao
+Web abc.xyz có an toàn không?,Hệ thống đang phân tích website này. Vui lòng đợi kết quả từ AI phân tích web.,canh_bao
+Liên hệ với admin ở đâu?,Chị có thể liên hệ admin qua email trustcheck@support.vn hoặc Fanpage chính thức.,support
+Tôi có thể xoá bình luận đã gửi không?,"Nếu chị là người gửi, có thể xoá bình luận bằng cách nhấn vào nút Xoá cạnh bình luận đó.",huong_dan

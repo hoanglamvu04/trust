@@ -35,7 +35,6 @@ export default function ReportDetail() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        await fetch(`http://localhost:5000/api/report/${id}/view`, { method: "PATCH" });
 
         const res = await fetch(`http://localhost:5000/api/report/${id}`);
         if (!res.ok) throw new Error("Không tìm thấy báo cáo!");

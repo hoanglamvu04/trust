@@ -1,0 +1,11 @@
+﻿Column1,Column2,Column3
+label,example,response
+lh_admin,Liên hệ với admin ở đâu?,Chị có thể liên hệ admin qua mục 'Liên hệ admin' trên trang chủ.
+lh_admin,"Tôi muốn báo cáo gấp, gặp ai?","Nếu cần hỗ trợ gấp, hãy nhắn trong phần 'Liên hệ'."
+lh_admin,Có admin nào trực không?,Admin thường online trong giờ hành chính.
+lh_email,Email của hệ thống là gì?,Hệ thống có thể nhận email qua trustcheck@example.com.
+lh_email,Gửi tố cáo qua email được không?,Chị có thể gửi thông tin tố cáo qua email nhưng nên dùng form web để đầy đủ hơn.
+lh_thoi_gian,Thời gian phản hồi là bao lâu?,Thông thường phản hồi trong vòng 24h làm việc.
+lh_thoi_gian,Tôi chờ mãi chưa thấy phản hồi,Chị có thể kiểm tra lại thư mục spam hoặc liên hệ trực tiếp để được hỗ trợ nhanh hơn.
+lh_zalo,Có hỗ trợ Zalo không?,"Có, chị có thể nhắn tin qua Zalo theo số hotline trên trang chủ."
+lh_zalo,Messenger hoạt động không?,Fanpage và Messenger đều hoạt động bình thường trong giờ hành chính.

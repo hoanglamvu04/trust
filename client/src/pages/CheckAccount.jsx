@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -14,6 +14,8 @@ export default function CheckAccount() {
   const [currentPage, setCurrentPage] = useState(1);
   const reportsPerPage = 5;
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const hasLoggedRef = useRef(new Set()); // Ghi lại các account đã log rồi
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -39,14 +41,18 @@ export default function CheckAccount() {
     if (queryAccount) {
       setAccount(queryAccount);
 
-      fetch("http://localhost:5000/api/searchlog", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ account: queryAccount })
-      })
-        .then(res => res.json())
-        .then(data => console.log("Đã log search:", data))
-        .catch(err => console.error("Log search error:", err));
+      // Chỉ log nếu chưa log account này trước đó
+      if (!hasLoggedRef.current.has(queryAccount)) {
+        hasLoggedRef.current.add(queryAccount); // Đánh dấu là đã log
+        fetch("http://localhost:5000/api/searchlog", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ account: queryAccount })
+        })
+          .then(res => res.json())
+          .then(data => console.log("Đã log search:", data))
+          .catch(err => console.error("Log search error:", err));
+      }
 
       const filtered = allReports.filter(
         (r) => r.accountNumber && r.accountNumber.includes(queryAccount)
@@ -100,7 +106,20 @@ export default function CheckAccount() {
 
         <div className="report-list">
           {currentReports.map((r, index) => (
-            <Link to={`/report/${r.id}`} key={`${r.id}-${index}`} className="report-card">
+            <div
+              key={`${r.id}-${index}`}
+              className="report-card"
+              onClick={async () => {
+                try {
+                  await fetch(`http://localhost:5000/api/report/${r.id}/view`, {
+                    method: "PATCH",
+                  });
+                } catch (err) {
+                  console.error("❌ Lỗi cập nhật lượt xem:", err);
+                }
+                window.location.href = `/report/${r.id}`;
+              }}
+            >
               <div className="report-top">
                 <span className="report-name">{r.accountName}</span>
                 <span className="report-id">
@@ -113,7 +132,7 @@ export default function CheckAccount() {
                 </span>
                 <span className="report-views">👁 {r.views || 0} lượt xem</span>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
 

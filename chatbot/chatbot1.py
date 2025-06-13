@@ -1,47 +1,62 @@
-# chatbot1.py
 import pandas as pd
 from sentence_transformers import SentenceTransformer, util
 import torch
-import os
 
-# Bước 1: Load dữ liệu
-DATA_PATH = "data.csv"
-if not os.path.exists(DATA_PATH):
-    pd.DataFrame(columns=["question", "answer"]).to_csv(DATA_PATH, index=False)
+# 1. Dùng model mạnh hơn
+model = SentenceTransformer('all-mpnet-base-v2')  # So với all-MiniLM-L6-v2 thì hiểu ngữ cảnh tốt hơn
 
-df = pd.read_csv(DATA_PATH).fillna("")
+# 2. Đọc dữ liệu và gắn nhãn phân loại
+df = pd.read_csv("data.csv").fillna("")
+df['category'] = df.get('category', 'default')  # nếu chưa có cột category thì gán tạm
 
-# Bước 2: Khởi tạo mô hình và encode câu hỏi
-model = SentenceTransformer('all-MiniLM-L6-v2')
+# 3. Encode tất cả câu hỏi
 question_embeddings = model.encode(df['question'].tolist(), convert_to_tensor=True)
 
-# Bước 3: Hàm lấy câu trả lời
+# 4. Context (memory tạm thời)
+chat_memory = []
+
 def get_response(user_input):
-    input_embedding = model.encode(user_input, convert_to_tensor=True)
-    cos_scores = util.pytorch_cos_sim(input_embedding, question_embeddings)[0]
-    best_score = torch.max(cos_scores).item()
-    best_idx = torch.argmax(cos_scores).item()
-
-    print(f"(Độ tương đồng ngữ nghĩa: {best_score:.2%})")
-    if best_score >= 0.7:
-        return df.iloc[best_idx]['answer']
+    # Gộp ngữ cảnh nếu có
+    if chat_memory:
+        context = " ".join(chat_memory[-3:])  # lấy 3 câu gần nhất
+        user_input_with_context = context + " " + user_input
     else:
-        print("ChatBot ML: Tôi chưa biết câu này. Bạn có muốn dạy tôi không? (y/n)")
-        choice = input("Bạn: ").lower().strip()
-        if choice == 'y':
-            new_answer = input("Nhập câu trả lời: ").strip()
-            df.loc[len(df)] = [user_input, new_answer]
-            df.to_csv(DATA_PATH, index=False)
-            global question_embeddings
-            question_embeddings = model.encode(df['question'].tolist(), convert_to_tensor=True)
-            return "Cảm ơn bạn! Tôi đã học thêm một điều mới."
-        else:
-            return "Không sao! Bạn cứ hỏi điều khác nhé."
+        user_input_with_context = user_input
 
-# Bước 4: Giao tiếp
-print("ChatBot ML (Semantic): Xin chào! Gõ 'quit' để thoát.")
-while True:
-    user_input = input("Bạn: ").strip()
-    if user_input.lower() == 'quit':
-        break
-    print("ChatBot ML:", get_response(user_input))
+    # Encode input có ngữ cảnh
+    input_embedding = model.encode(user_input_with_context, convert_to_tensor=True)
+    cos_scores = util.pytorch_cos_sim(input_embedding, question_embeddings)[0]
+
+    # Tìm top 3 câu gần nhất
+    top_k = min(3, len(df))
+    top_results = torch.topk(cos_scores, k=top_k)
+
+    # Nếu câu tốt nhất đủ giống
+    if top_results.values[0].item() >= 0.65:
+        suggestions = []
+        for score, idx in zip(top_results.values, top_results.indices):
+            idx = idx.item()
+            question = df.iloc[idx]['question']
+            answer = df.iloc[idx]['answer']
+            category = df.iloc[idx]['category']
+            suggestions.append({
+                "question": question,
+                "answer": answer,
+                "score": round(score.item(), 3),
+                "category": category
+            })
+
+        # Lưu lại input vào context
+        chat_memory.append(user_input)
+
+        return {
+            "reply": suggestions[0]["answer"],
+            "suggestions": suggestions[1:],  # 2 câu gợi ý còn lại
+            "category": suggestions[0]["category"]
+        }
+    else:
+        return {
+            "reply": "Xin lỗi, tôi chưa hiểu câu này. Bạn có thể hỏi theo cách khác nhé.",
+            "suggestions": [],
+            "category": "unknown"
+        }
