@@ -3,15 +3,13 @@ const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
 // Helpers
-const getRolePriority = (roleId) => {
-  return parseInt(roleId); // Lower number = higher privilege
-};
+const getRolePriority = (roleId) => parseInt(roleId);
 
 // Lấy tất cả người dùng
 exports.getAllUsers = async (req, res) => {
   try {
     const [users] = await db.query(
-      `SELECT id, username, name, email, status, roleId, createdAt FROM users ORDER BY createdAt DESC`
+      `SELECT id, username, name, email, nickname, status, roleId, createdAt FROM users ORDER BY createdAt DESC`
     );
     res.json({ success: true, users });
   } catch (err) {
@@ -25,7 +23,7 @@ exports.getUserById = async (req, res) => {
   const { id } = req.params;
   try {
     const [rows] = await db.query(
-      `SELECT id, username, name, email, status, roleId, createdAt FROM users WHERE id = ?`,
+      `SELECT id, username, name, email, nickname, status, roleId, createdAt FROM users WHERE id = ?`,
       [id]
     );
     if (rows.length === 0)
@@ -37,19 +35,20 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-// Tạo tài khoản người dùng (có mã hóa)
+// Tạo tài khoản người dùng
 exports.createUser = async (req, res) => {
-  const { username, name, email, password, status = 'chưa xác thực', roleId } = req.body;
+  const { username, name, email, password, nickname, status, roleId } = req.body;
   const id = uuidv4();
   const safeRoleId = parseInt(roleId);
   const finalRoleId = [1, 2, 3].includes(safeRoleId) ? safeRoleId : 4;
+  const userStatus = (status === 2 || status === "2") ? 2 : 1;
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await db.query(
-      `INSERT INTO users (id, username, name, email, password, status, roleId) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [id, username, name, email, hashedPassword, status, finalRoleId]
+      `INSERT INTO users (id, username, name, email, password, nickname, status, roleId, tokenVersion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+      [id, username, name, email, hashedPassword, nickname, userStatus, finalRoleId]
     );
 
     res.status(201).json({ success: true, message: 'Tạo user thành công!', id });
@@ -59,11 +58,11 @@ exports.createUser = async (req, res) => {
   }
 };
 
-// Cập nhật người dùng (có mã hóa nếu thay đổi mật khẩu)
+// Cập nhật người dùng
 exports.updateUser = async (req, res) => {
   const { id } = req.params;
-  const { username, name, email, password, status, roleId } = req.body;
-  const currentUser = req.user; // Gán từ middleware auth
+  const { username, name, email, password, nickname, status, roleId } = req.body;
+  const currentUser = req.user;
 
   try {
     const [[targetUser]] = await db.query('SELECT * FROM users WHERE id = ?', [id]);
@@ -77,29 +76,40 @@ exports.updateUser = async (req, res) => {
       return res.status(403).json({ message: 'Bạn không có quyền chỉnh sửa user cấp cao hơn!' });
     }
 
-    let query = 'UPDATE users SET username = ?, name = ?, email = ?';
-    const params = [username, name, email];
+    let query = 'UPDATE users SET username = ?, name = ?, email = ?, nickname = ?';
+    const params = [username, name, email, nickname];
+    let needIncreaseToken = false;
 
     if (password && password.trim() !== '') {
       const hashed = await bcrypt.hash(password, 10);
       query += ', password = ?';
       params.push(hashed);
+      needIncreaseToken = true;
     }
-    if (status) {
+
+    if (status !== undefined) {
+      const safeStatus = (parseInt(status) === 2) ? 2 : 1;
       query += ', status = ?';
-      params.push(status);
+      params.push(safeStatus);
+      needIncreaseToken = true;
     }
+
     if (roleId !== undefined) {
       query += ', roleId = ?';
       params.push(roleId);
     }
+
     query += ' WHERE id = ?';
     params.push(id);
 
     await db.query(query, params);
 
+    if (needIncreaseToken) {
+      await db.query('UPDATE users SET tokenVersion = tokenVersion + 1 WHERE id = ?', [id]);
+    }
+
     const [[updated]] = await db.query(
-      'SELECT id, username, name, email, status, roleId FROM users WHERE id = ?',
+      'SELECT id, username, name, email, nickname, status, roleId FROM users WHERE id = ?',
       [id]
     );
 
@@ -107,6 +117,25 @@ exports.updateUser = async (req, res) => {
   } catch (err) {
     console.error('❌ Lỗi cập nhật user:', err);
     res.status(500).json({ success: false, message: 'Lỗi server!' });
+  }
+};
+
+// Cập nhật trạng thái user
+exports.updateUserStatus = async (req, res) => {
+  const { id } = req.params;
+  let { status } = req.body;
+  status = (parseInt(status) === 2) ? 2 : 1;
+
+  try {
+    const [result] = await db.query('UPDATE users SET status = ? WHERE id = ?', [status, id]);
+    if (result.affectedRows === 0)
+      return res.status(404).json({ message: 'Không tìm thấy user!' });
+
+    await db.query('UPDATE users SET tokenVersion = tokenVersion + 1 WHERE id = ?', [id]);
+    res.json({ success: true, message: 'Cập nhật trạng thái thành công.', status });
+  } catch (err) {
+    console.error('❌ Lỗi cập nhật trạng thái:', err);
+    res.status(500).json({ message: 'Lỗi server!' });
   }
 };
 
@@ -135,23 +164,26 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// Cập nhật trạng thái
-exports.updateUserStatus = async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-  const validStatus = ['chưa xác thực', 'đã xác thực', 'bị khóa'];
+// Cập nhật nickname
+exports.updateNickname = async (req, res) => {
+  const userId = req.user.id;
+  const { nickname } = req.body;
 
-  if (!validStatus.includes(status)) {
-    return res.status(400).json({ message: 'Trạng thái không hợp lệ!' });
-  }
+  if (!nickname || !nickname.trim())
+    return res.status(400).json({ success: false, message: "Vui lòng nhập biệt danh!" });
 
   try {
-    const [result] = await db.query('UPDATE users SET status = ? WHERE id = ?', [status, id]);
-    if (result.affectedRows === 0)
-      return res.status(404).json({ message: 'Không tìm thấy user!' });
-    res.json({ success: true, message: 'Cập nhật trạng thái thành công.', status });
+    const [exist] = await db.query(
+      "SELECT id FROM users WHERE nickname = ? AND id != ?",
+      [nickname, userId]
+    );
+    if (exist.length > 0)
+      return res.status(400).json({ success: false, message: "Biệt danh đã tồn tại. Chọn biệt danh khác!" });
+
+    await db.query("UPDATE users SET nickname = ? WHERE id = ?", [nickname, userId]);
+    res.json({ success: true, message: "Cập nhật biệt danh thành công!", nickname });
   } catch (err) {
-    console.error('❌ Lỗi cập nhật trạng thái:', err);
-    res.status(500).json({ message: 'Lỗi server!' });
+    console.error("❌ updateNickname error:", err);
+    res.status(500).json({ success: false, message: "Lỗi server!" });
   }
 };

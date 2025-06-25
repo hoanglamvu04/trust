@@ -133,3 +133,21 @@ exports.incrementViews = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server!' });
   }
 };
+
+// Lấy tất cả report theo accountNumber (chính xác từng số, không LIKE)
+exports.getReportsByAccountNumber = async (req, res) => {
+  const { accountNumber } = req.params;
+  if (!accountNumber) {
+    return res.status(400).json({ message: "Thiếu số tài khoản!" });
+  }
+  try {
+    const [rows] = await db.query(
+      'SELECT * FROM reports WHERE accountNumber = ?',
+      [accountNumber]
+    );
+    res.json(rows); // Trả về mảng report (có thể là rỗng)
+  } catch (err) {
+    console.error('❌ Lỗi lấy báo cáo theo account:', err);
+    res.status(500).json({ message: 'Lỗi server!' });
+  }
+};

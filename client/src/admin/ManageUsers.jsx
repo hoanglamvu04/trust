@@ -8,12 +8,18 @@ export default function ManageUsers() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [form, setForm] = useState({
-    username: "", name: "", email: "", password: "", status: "chưa xác thực", roleId: 4
+    username: "", name: "", email: "", password: "", status: 1, roleId: 4
   });
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 30;
+
+  // 1: hoạt động, 2: bị khóa
+  const STATUS_MAP = {
+    1: "Hoạt động",
+    2: "Bị khóa"
+  };
 
   const fetchUsers = () => {
     fetch(`/api/users`)
@@ -28,7 +34,7 @@ export default function ManageUsers() {
             );
           }
           if (statusFilter) {
-            filtered = filtered.filter(u => u.status.toLowerCase() === statusFilter.toLowerCase());
+            filtered = filtered.filter(u => String(u.status) === String(statusFilter));
           }
           setUsers(filtered);
         }
@@ -47,7 +53,11 @@ export default function ManageUsers() {
     const method = editingUser ? "PUT" : "POST";
     const url = editingUser ? `/api/users/${editingUser.id}` : `/api/users`;
     const payload = { ...form };
-    if (!editingUser) delete payload.status;
+    if (!editingUser) delete payload.status; // Khi tạo mới, status để mặc định là 1
+
+    // Chuyển status về int
+    if (payload.status) payload.status = parseInt(payload.status);
+    if (payload.roleId) payload.roleId = parseInt(payload.roleId);
 
     fetch(url, {
       method,
@@ -58,7 +68,7 @@ export default function ManageUsers() {
       .then(json => {
         if (json.success || json.message?.includes("thành công")) {
           toast.success(editingUser ? "✅ Cập nhật user thành công!" : "✅ Thêm user thành công!");
-          setForm({ username: "", name: "", email: "", password: "", status: "chưa xác thực", roleId: 4 });
+          setForm({ username: "", name: "", email: "", password: "", status: 1, roleId: 4 });
           setEditingUser(null);
           setShowModal(false);
           fetchUsers();
@@ -82,8 +92,12 @@ export default function ManageUsers() {
   const openEdit = user => {
     setEditingUser(user);
     setForm({
-      username: user.username, name: user.name, email: user.email,
-      password: "", status: user.status, roleId: user.roleId || 4
+      username: user.username,
+      name: user.name,
+      email: user.email,
+      password: "",
+      status: user.status,
+      roleId: user.roleId || 4
     });
     setShowModal(true);
   };
@@ -108,9 +122,8 @@ export default function ManageUsers() {
             style={{ minWidth: "180px" }}
           >
             <option value="">-- Lọc theo Trạng thái --</option>
-            <option value="chưa xác thực">Chưa xác thực</option>
-            <option value="đã xác thực">Đã xác thực</option>
-            <option value="bị khóa">Bị khóa</option>
+            <option value={1}>Hoạt động</option>
+            <option value={2}>Bị khóa</option>
           </select>
           <button className="btn-add" onClick={() => { setEditingUser(null); setShowModal(true); }}>
             Thêm Người Dùng
@@ -138,9 +151,8 @@ export default function ManageUsers() {
                 <td>{user.email}</td>
                 <td>
                   <select disabled value={user.status}>
-                    <option value="chưa xác thực">Chưa xác thực</option>
-                    <option value="đã xác thực">Đã xác thực</option>
-                    <option value="bị khóa">Bị khóa</option>
+                    <option value={1}>Hoạt động</option>
+                    <option value={2}>Bị khóa</option>
                   </select>
                 </td>
                 <td>{new Date(user.createdAt).toLocaleString("vi-VN")}</td>
@@ -184,9 +196,8 @@ export default function ManageUsers() {
               {editingUser && (
                 <>
                   <select name="status" value={form.status} onChange={handleChange}>
-                    <option value="chưa xác thực">Chưa xác thực</option>
-                    <option value="đã xác thực">Đã xác thực</option>
-                    <option value="bị khóa">Bị khóa</option>
+                    <option value={1}>Hoạt động</option>
+                    <option value={2}>Bị khóa</option>
                   </select>
                   <select name="roleId" value={form.roleId} onChange={handleChange}>
                     <option value={1}>Quản trị hệ thống</option>

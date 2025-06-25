@@ -28,7 +28,13 @@ export default function ManageComments() {
     fetch(`/api/admin/comments?${query}`)
       .then((res) => res.json())
       .then((data) => {
-        setComments(data.comments || []);
+        // Always parse likes/replies to array
+        const parsed = (data.comments || []).map((c) => ({
+          ...c,
+          likes: typeof c.likes === "string" ? JSON.parse(c.likes || "[]") : c.likes || [],
+          replies: typeof c.replies === "string" ? JSON.parse(c.replies || "[]") : c.replies || [],
+        }));
+        setComments(parsed);
         setTotalPages(data.totalPages || 1);
       })
       .catch(() => toast.error("❌ Lỗi fetch comments"));
@@ -185,18 +191,35 @@ export default function ManageComments() {
           </thead>
           <tbody>
             {comments.map((c) => (
-              <tr key={c.id}>
-                <td>{c.username || c.userId}</td>
-                <td>{c.accountNumber || c.reportId}</td>
-                <td>{c.content}</td>
-                <td>{Array.isArray(c.likes) ? c.likes.length : 0}</td>
-                <td>{Array.isArray(c.replies) ? c.replies.length : 0}</td>
-                <td>{new Date(c.createdAt).toLocaleString("vi-VN")}</td>
-                <td>
-                  <button className="btn-icon" onClick={() => handleEdit(c)}>Sửa</button>
-                  <button className="btn-icon" onClick={() => handleDelete(c.id)}>Xóa</button>
-                </td>
-              </tr>
+              <React.Fragment key={c.id}>
+                <tr>
+                  <td>{c.alias || c.username || c.userId}</td>
+                  <td>{c.accountNumber || c.reportId}</td>
+                  <td>{c.content}</td>
+                  <td>{c.likes.length}</td>
+                  <td>{c.replies.length}</td>
+                  <td>{new Date(c.createdAt).toLocaleString("vi-VN")}</td>
+                  <td>
+                    <button className="btn-icon" onClick={() => handleEdit(c)}>Sửa</button>
+                    <button className="btn-icon" onClick={() => handleDelete(c.id)}>Xóa</button>
+                  </td>
+                </tr>
+                {c.replies && c.replies.length > 0 && (
+                  <tr>
+                    <td colSpan={7} style={{ background: "#f9f9f9", padding: "10px" }}>
+                      <strong>Phản hồi:</strong>
+                      <ul style={{ margin: 0 }}>
+                        {c.replies.map((r, idx) => (
+                          <li key={idx}>
+                            <span style={{ color: "#0088ff" }}>{r.userName}</span>: {r.content}
+                            <span style={{ fontSize: "11px", color: "#666", marginLeft: 8 }}>{new Date(r.createdAt).toLocaleString("vi-VN")}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
           </tbody>
         </table>

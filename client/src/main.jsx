@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 
 // Pages
 import App from './App';
@@ -27,8 +27,33 @@ import AdminGuard from './admin/AdminGuard';
 import ChatbotModal from './components/ChatbotModal';
 import ChatbotLauncher from './components/ChatbotLauncher';
 
-// Wrapper for chatbot logic
+// --- Auto check phiên đăng nhập mỗi 60s ---
+function useAutoCheckAuth() {
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        const data = await res.json();
+        if (!data.success) {
+          localStorage.removeItem("user");
+          localStorage.removeItem("auth-event");
+          window.location.href = "#"; // hoặc navigate("/login");
+        }
+      } catch (err) {
+        window.location.href = "#";
+      }
+    }, 60 * 1000); // mỗi 60 giây
+
+    return () => clearInterval(interval);
+  }, [navigate]);
+}
+
+// Wrapper cho toàn bộ app, tự động bảo vệ phiên đăng nhập
 function AppWithChatbot() {
+  useAutoCheckAuth();
+
   const location = useLocation();
   const [chatbotOpen, setChatbotOpen] = React.useState(false);
   const hideChatbot = location.pathname.startsWith('/admin');

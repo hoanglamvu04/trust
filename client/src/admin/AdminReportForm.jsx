@@ -28,21 +28,25 @@ export default function AdminReportForm() {
   const [modalOpen, setModalOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
 
-  useEffect(() => {
-    if (id) {
-      fetch(`http://localhost:5000/api/admin/reports/${id}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            const r = data.report;
-            const parsedProof = r.proof ? JSON.parse(r.proof) : [];
-            setForm({ ...r, proofs: [], status: r.status || "approved" });
-            setProofURLs(parsedProof);
-          }
-        })
-        .catch(console.error);
-    }
-  }, [id]);
+ useEffect(() => {
+  if (id) {
+    fetch(`http://localhost:5000/api/admin/reports/${id}`, {
+      credentials: "include",
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log("DATA REPORT DETAIL:", data); 
+        if (data.success) {
+          const r = data.report;
+          const parsedProof = r.proof ? JSON.parse(r.proof) : [];
+          setForm({ ...r, proofs: [], status: r.status || "approved" });
+          setProofURLs(parsedProof);
+        }
+      })
+      .catch(console.error);
+  }
+}, [id]);
+
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;

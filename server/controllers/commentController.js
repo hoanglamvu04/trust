@@ -1,47 +1,17 @@
 const db = require("../db");
 const { v4: uuidv4 } = require("uuid");
 
-// 📌 Lấy alias chưa sử dụng trong 1 report
-async function getUnusedAlias(reportId) {
-  const [used] = await db.query(
-    "SELECT alias FROM anonymous_aliases WHERE reportId = ?",
-    [reportId]
-  );
-  const usedAliases = used.map(row => row.alias);
-
-  const [available] = await db.query(
-    "SELECT name FROM alias_pool WHERE name NOT IN (?) ORDER BY RAND() LIMIT 1",
-    [usedAliases.length ? usedAliases : [""]]
-  );
-
-  return available[0]?.name || `Người ẩn danh #${Math.floor(Math.random() * 10000)}`;
-}
-
-// 📌 Lấy alias cố định cho user trong 1 report, tạo mới nếu chưa có
-async function ensureAlias(userId, reportId) {
-  const [[existing]] = await db.query(
-    "SELECT alias FROM anonymous_aliases WHERE userId = ? AND reportId = ? LIMIT 1",
-    [userId, reportId]
-  );
-
-  if (existing) return existing.alias;
-
-  const alias = await getUnusedAlias(reportId);
-
-  await db.query(
-    "INSERT INTO anonymous_aliases (id, userId, reportId, alias) VALUES (?, ?, ?, ?)",
-    [uuidv4(), userId, reportId, alias]
-  );
-
-  return alias;
-}
-
-// ✅ Lấy bình luận theo report
+// Lấy bình luận theo report, kèm nickname user
 exports.getCommentsByReport = async (req, res) => {
   const { reportId } = req.params;
   try {
+    // Lấy comment + nickname user
     const [comments] = await db.query(
-      "SELECT * FROM comments WHERE reportId = ? ORDER BY createdAt DESC",
+      `SELECT c.*, u.nickname 
+       FROM comments c 
+       JOIN users u ON c.userId = u.id 
+       WHERE c.reportId = ? 
+       ORDER BY c.createdAt DESC`,
       [reportId]
     );
     res.json(comments);
@@ -51,41 +21,45 @@ exports.getCommentsByReport = async (req, res) => {
   }
 };
 
-// ✅ Tạo bình luận mới
+// Tạo bình luận mới (phải có nickname)
 exports.createComment = async (req, res) => {
-  const rawUserId = req.body.userId;
-  const userId = Array.isArray(rawUserId) ? rawUserId[0] : rawUserId;
-
-  const reportId = req.body.reportId; // ✅ Bổ sung dòng này
+  const userId = req.user.id;
+  const reportId = req.body.reportId;
   const content = req.body.content;
 
-  if (!reportId || !userId || !content?.trim()) {
+  if (!reportId || !content?.trim()) {
     return res.status(400).json({ message: "Thiếu thông tin!" });
+  }
+
+  // Kiểm tra nickname của user
+  const [[user]] = await db.query(
+    "SELECT nickname FROM users WHERE id = ?",
+    [userId]
+  );
+  if (!user || !user.nickname || !user.nickname.trim()) {
+    return res.status(400).json({ message: "Bạn cần đặt biệt danh trước khi bình luận!" });
   }
 
   const id = uuidv4();
 
   try {
-    const alias = await ensureAlias(userId, reportId);
-
     await db.query(
-      `INSERT INTO comments (id, reportId, userId, alias, content, likes, replies, createdAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [id, reportId, userId, alias, content, "[]", "[]"]
+      `INSERT INTO comments (id, reportId, userId, content, likes, replies, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+      [id, reportId, userId, content, "[]", "[]"]
     );
 
-    res.status(201).json({ message: "Đã bình luận!", id, alias });
+    res.status(201).json({ message: "Đã bình luận!", id });
   } catch (err) {
     console.error("❌ createComment error:", err);
     res.status(500).json({ message: "Lỗi server!" });
   }
 };
 
-
-// ✅ Like hoặc Unlike
+// Like hoặc Unlike giữ nguyên (không liên quan nickname)
 exports.toggleLike = async (req, res) => {
   const { commentId } = req.params;
-  const { userId } = req.body;
+  const userId = req.user.id;
 
   try {
     const [[row]] = await db.query("SELECT likes FROM comments WHERE id = ?", [commentId]);
@@ -112,19 +86,27 @@ exports.toggleLike = async (req, res) => {
   }
 };
 
-// ✅ Trả lời bình luận
+// Trả lời bình luận (nickname cho reply)
 exports.replyToComment = async (req, res) => {
   const { commentId } = req.params;
-  const { userId, content } = req.body;
+  const userId = req.user.id;
+  const content = req.body.content;
 
   if (!content?.trim())
     return res.status(400).json({ message: "Nội dung phản hồi không hợp lệ!" });
 
-  try {
-    const [[row]] = await db.query("SELECT reportId, replies FROM comments WHERE id = ?", [commentId]);
-    if (!row) return res.status(404).json({ message: "Không tìm thấy bình luận!" });
+  // Kiểm tra nickname
+  const [[user]] = await db.query(
+    "SELECT nickname FROM users WHERE id = ?",
+    [userId]
+  );
+  if (!user || !user.nickname || !user.nickname.trim()) {
+    return res.status(400).json({ message: "Bạn cần đặt biệt danh trước khi trả lời!" });
+  }
 
-    const alias = await ensureAlias(userId, row.reportId);
+  try {
+    const [[row]] = await db.query("SELECT replies FROM comments WHERE id = ?", [commentId]);
+    if (!row) return res.status(404).json({ message: "Không tìm thấy bình luận!" });
 
     let replies = [];
     try {
@@ -135,7 +117,7 @@ exports.replyToComment = async (req, res) => {
 
     replies.push({
       userId,
-      userName: alias,
+      userName: user.nickname,
       content,
       createdAt: new Date().toISOString()
     });
@@ -148,10 +130,21 @@ exports.replyToComment = async (req, res) => {
   }
 };
 
-// ✅ Xoá bình luận
+// Xoá bình luận
 exports.deleteComment = async (req, res) => {
   const { commentId } = req.params;
+  const userId = req.user.id;
+  const userRole = req.user.roleId;
+
   try {
+    const [[comment]] = await db.query("SELECT userId FROM comments WHERE id = ?", [commentId]);
+    if (!comment) return res.status(404).json({ message: "Không tìm thấy bình luận!" });
+
+    // Chỉ cho phép chính chủ hoặc admin (role 1, 2) xoá
+    if (String(comment.userId) !== String(userId) && userRole > 2) {
+      return res.status(403).json({ message: "Không có quyền xoá bình luận này!" });
+    }
+
     const [result] = await db.query("DELETE FROM comments WHERE id = ?", [commentId]);
     if (result.affectedRows === 0)
       return res.status(404).json({ message: "Không tìm thấy bình luận!" });
@@ -163,16 +156,27 @@ exports.deleteComment = async (req, res) => {
   }
 };
 
-// ✅ Xoá phản hồi
+// Xoá phản hồi
 exports.deleteReply = async (req, res) => {
   const { commentId, replyIndex } = req.params;
+  const userId = req.user.id;
+  const userRole = req.user.roleId;
+
   try {
     const [[row]] = await db.query("SELECT replies FROM comments WHERE id = ?", [commentId]);
     if (!row) return res.status(404).json({ message: "Không tìm thấy bình luận!" });
 
-    const replies = JSON.parse(row.replies || "[]");
+    let replies = JSON.parse(row.replies || "[]");
     if (replyIndex < 0 || replyIndex >= replies.length)
       return res.status(400).json({ message: "Chỉ số phản hồi không hợp lệ!" });
+
+    // Chỉ cho phép chính chủ hoặc admin (role 1, 2) xoá
+    if (
+      String(replies[replyIndex].userId) !== String(userId) &&
+      userRole > 2
+    ) {
+      return res.status(403).json({ message: "Không có quyền xoá phản hồi này!" });
+    }
 
     replies.splice(replyIndex, 1);
     await db.query("UPDATE comments SET replies = ? WHERE id = ?", [JSON.stringify(replies), commentId]);
@@ -185,20 +189,18 @@ exports.deleteReply = async (req, res) => {
 };
 
 exports.getCommentsByUser = async (req, res) => {
-  console.log("📦 SESSION:", req.session);
-  console.log("📦 req.session.user:", req.session?.user);
-  console.log("📦 req.user (from JWT):", req.user);
-
-  const userId = req.session?.user?.id || req.user?.id;
-
+  const userId = req.user.id;
   if (!userId) {
-    console.warn("🚫 Không có userId để truy vấn bình luận!");
     return res.status(401).json({ message: "Chưa đăng nhập!" });
   }
 
   try {
     const [comments] = await db.query(
-      "SELECT * FROM comments WHERE userId = ? ORDER BY createdAt DESC",
+      `SELECT c.*, u.nickname
+       FROM comments c
+       JOIN users u ON c.userId = u.id
+       WHERE c.userId = ?
+       ORDER BY c.createdAt DESC`,
       [userId]
     );
     res.json(comments);
@@ -207,4 +209,3 @@ exports.getCommentsByUser = async (req, res) => {
     res.status(500).json({ message: "Lỗi server!" });
   }
 };
-

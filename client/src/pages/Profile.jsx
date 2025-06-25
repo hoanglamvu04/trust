@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import React from 'react';
+import React from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SidebarProfile from "../components/SidebarProfile";
@@ -10,27 +10,29 @@ import "../styles/Profile.css";
 export default function Profile() {
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [nicknameMode, setNicknameMode] = useState(false);
   const [userData, setUserData] = useState({
     id: "",
     username: "",
     name: "",
     email: "",
     createdAt: "",
+    nickname: "",
   });
-
   const [formEdit, setFormEdit] = useState({ username: "", name: "" });
+  const [formNickname, setFormNickname] = useState("");
   const [formPassword, setFormPassword] = useState({
     oldPassword: "",
     newPassword: "",
     confirmNew: "",
   });
 
-  // 🟢 Lấy user từ API /api/auth/me (dựa vào cookie)
+  // Lấy user từ API /api/auth/me (dựa vào cookie)
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const res = await fetch("http://localhost:5000/api/auth/me", {
-          credentials: "include", // gửi cookie
+          credentials: "include",
         });
         const result = await res.json();
         if (result.success) {
@@ -39,12 +41,12 @@ export default function Profile() {
             username: result.user.username,
             name: result.user.name,
           });
+          setFormNickname(result.user.nickname || "");
         } else {
           toast.error("Chưa đăng nhập!", { position: "top-right" });
           setTimeout(() => (window.location.href = "/"), 1500);
         }
       } catch (err) {
-        console.error("Lỗi lấy user:", err);
         toast.error("Lỗi kết nối server!", { position: "top-right" });
         setTimeout(() => (window.location.href = "/"), 1500);
       }
@@ -72,13 +74,46 @@ export default function Profile() {
       const result = await res.json();
       if (result.success) {
         toast.success(result.message, { position: "top-right" });
-        setUserData(result.user);
+        setUserData((prev) => ({
+          ...prev,
+          username: result.user.username,
+          name: result.user.name,
+        }));
         setEditMode(false);
       } else {
         toast.error(result.message, { position: "top-right" });
       }
     } catch (err) {
-      console.error(err);
+      toast.error("Lỗi server!", { position: "top-right" });
+    }
+  };
+
+  // Đổi biệt danh
+  const handleUpdateNickname = async () => {
+    const newNickname = formNickname.trim();
+    if (!newNickname) {
+      toast.error("Bạn phải nhập biệt danh!", { position: "top-right" });
+      return;
+    }
+    try {
+      const res = await fetch("http://localhost:5000/api/users/nickname", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ nickname: newNickname }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        toast.success("Cập nhật biệt danh thành công!", { position: "top-right" });
+        setUserData((prev) => ({
+          ...prev,
+          nickname: newNickname,
+        }));
+        setNicknameMode(false);
+      } else {
+        toast.error(result.message, { position: "top-right" });
+      }
+    } catch (err) {
       toast.error("Lỗi server!", { position: "top-right" });
     }
   };
@@ -118,7 +153,6 @@ export default function Profile() {
         toast.error(result.message, { position: "top-right" });
       }
     } catch (err) {
-      console.error(err);
       toast.error("Lỗi server!", { position: "top-right" });
     }
   };
@@ -128,7 +162,7 @@ export default function Profile() {
       <Header />
       <ToastContainer
         position="top-right"
-        style={{ marginTop: "60px" }} // ✅ đẩy xuống dưới header
+        style={{ marginTop: "60px" }}
       />
 
       <div className="profile-page">
@@ -175,6 +209,53 @@ export default function Profile() {
                   ? new Date(userData.createdAt).toLocaleDateString("vi-VN")
                   : "Chưa có"}
               </div>
+
+              <div>
+                <span>Biệt danh (nickname):</span>{" "}
+                {!nicknameMode ? (
+                  <>
+                    <span style={{ color: userData.nickname ? "black" : "gray" }}>
+                      {userData.nickname || <i>Chưa đặt</i>}
+                    </span>
+                    <button
+                      className="edit-btn"
+                      style={{ marginLeft: 8 }}
+                      onClick={() => setNicknameMode(true)}
+                    >
+                      {userData.nickname ? "Đổi biệt danh" : "Đặt biệt danh"}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      style={{ marginLeft: 8 }}
+                      value={formNickname}
+                      onChange={(e) => setFormNickname(e.target.value)}
+                      maxLength={100}
+                      placeholder="Nhập biệt danh mới..."
+                      autoFocus
+                    />
+                    <button
+                      className="save-btn"
+                      style={{ marginLeft: 8 }}
+                      onClick={handleUpdateNickname}
+                    >
+                      Lưu
+                    </button>
+                    <button
+                      className="cancel-btn"
+                      style={{ marginLeft: 8 }}
+                      onClick={() => {
+                        setNicknameMode(false);
+                        setFormNickname(userData.nickname || "");
+                      }}
+                    >
+                      Huỷ
+                    </button>
+                  </>
+                )}
+              </div>
+
               <div className="password-line">
                 <span>Mật khẩu:</span> ********
                 {!showPasswordForm && (

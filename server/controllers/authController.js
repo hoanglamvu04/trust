@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 
-// ✅ Đăng ký
+// Đăng ký
 exports.register = async (req, res) => {
   const { username, name, email, password, confirmPassword } = req.body;
 
@@ -24,11 +24,11 @@ exports.register = async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
     const id = uuidv4();
 
+    // tokenVersion mặc định là 1, nickname để rỗng khi đăng ký, bắt user tự cập nhật
     await db.query(
-      'INSERT INTO users (id, username, name, email, password) VALUES (?, ?, ?, ?, ?)',
-      [id, username, name, email, hashed]
+      'INSERT INTO users (id, username, name, email, password, status, roleId, tokenVersion, nickname) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [id, username, name, email, hashed, 1, 4, 1, null]
     );
-
     res.json({ success: true, message: 'Đăng ký thành công!' });
   } catch (err) {
     console.error('❌ register error:', err);
@@ -36,7 +36,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// ✅ Đăng nhập
+// Đăng nhập
 exports.login = async (req, res) => {
   const { username, password } = req.body;
 
@@ -49,25 +49,27 @@ exports.login = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Tên đăng nhập không tồn tại.' });
 
     const user = users[0];
+    if (user.status !== 1) { // 1 là hoạt động, 2 là bị khóa
+      return res.status(403).json({ success: false, message: 'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên!' });
+    }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(400).json({ success: false, message: 'Mật khẩu không đúng.' });
 
-    // ✅ Tạo JWT
+    // Tạo JWT với tokenVersion hiện tại
     const token = jwt.sign(
-      { id: user.id, username: user.username, roleId: user.roleId },
+      { id: user.id, username: user.username, roleId: user.roleId, tokenVersion: user.tokenVersion },
       process.env.JWT_SECRET || 'secret_key',
       { expiresIn: '1d' }
     );
 
-    // ✅ Gửi cookie JWT
+    // Gửi cookie JWT
     res.cookie('token', token, {
       httpOnly: true,
       sameSite: 'strict',
       secure: false // bật true nếu dùng HTTPS
     });
 
-    // ✅ Đồng thời gán session để sử dụng ở phần khác như comment
     req.session.user = {
       id: user.id,
       name: user.name,
@@ -85,6 +87,7 @@ exports.login = async (req, res) => {
         email: user.email,
         createdAt: user.createdAt,
         roleId: user.roleId,
+        nickname: user.nickname || "", // Thêm nickname vào trả về
       }
     });
   } catch (err) {
@@ -93,40 +96,21 @@ exports.login = async (req, res) => {
   }
 };
 
-// ✅ Lấy thông tin người dùng hiện tại (kèm alias nếu truyền reportId)
+// Lấy thông tin người dùng hiện tại (bắt buộc verifyToken trước khi vào hàm này!)
 exports.getCurrentUser = async (req, res) => {
-  const token = req.cookies.token;
-  const reportId = req.query.reportId;
-
-  if (!token) return res.status(401).json({ success: false, message: 'Bạn chưa đăng nhập!' });
+  const userId = req.user.id; // Lấy từ verifyToken middleware
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key');
-    const userId = decoded.id;
-
     const [users] = await db.query(
-      'SELECT id, username, name, email, createdAt, roleId FROM users WHERE id = ?',
+      'SELECT id, username, name, email, createdAt, roleId, nickname FROM users WHERE id = ?',
       [userId]
     );
     if (users.length === 0)
       return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng.' });
 
-    // ✅ Nếu có reportId, tìm alias ứng với report
-    let alias = "";
-    if (reportId) {
-      const [rows] = await db.query(
-        "SELECT alias FROM anonymous_aliases WHERE userId = ? AND reportId = ? LIMIT 1",
-        [userId, reportId]
-      );
-      alias = rows[0]?.alias || "";
-    }
-
     res.json({
       success: true,
-      user: {
-        ...users[0],
-        alias,
-      }
+      user: users[0]
     });
   } catch (err) {
     console.error('❌ getCurrentUser error:', err);
@@ -134,10 +118,12 @@ exports.getCurrentUser = async (req, res) => {
   }
 };
 
-// ✅ Đăng xuất
+// Đăng xuất
 exports.logout = (req, res) => {
   res.clearCookie('token');
   req.session.destroy(() => {
     res.json({ success: true, message: 'Đăng xuất thành công!' });
   });
 };
+
+// (Bạn có thể bổ sung thêm API updateNickname nếu muốn cho phép đổi biệt danh)

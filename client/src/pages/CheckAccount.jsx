@@ -55,9 +55,10 @@ export default function CheckAccount() {
       }
 
       const filtered = allReports.filter(
-        (r) => r.accountNumber && r.accountNumber.includes(queryAccount)
+        (r) => r.accountNumber && r.accountNumber === queryAccount
       );
       setReports(filtered);
+
     } else {
       setReports(allReports);
     }
