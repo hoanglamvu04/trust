@@ -12,7 +12,6 @@ exports.getAllAccounts = async (req, res) => {
   }
 };
 
-// Thêm mới một tài khoản
 exports.createAccount = async (req, res) => {
   const { name, phone, accountNumber } = req.body;
   const id = uuidv4();

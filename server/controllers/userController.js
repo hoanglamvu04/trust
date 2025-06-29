@@ -187,3 +187,17 @@ exports.updateNickname = async (req, res) => {
     res.status(500).json({ success: false, message: "Lỗi server!" });
   }
 };
+
+// Reset mật khẩu user (API)
+exports.resetPassword = async (req, res) => {
+  const { id } = req.params;
+  const currentUser = req.user;
+  if (parseInt(currentUser.roleId) > 2)
+    return res.status(403).json({ message: "Bạn không có quyền reset mật khẩu!" });
+
+  const newPassword = "12345678"; // Hoặc random tùy bạn
+  const hashed = await require('bcryptjs').hash(newPassword, 10);
+
+  await db.query('UPDATE users SET password = ?, tokenVersion = tokenVersion + 1 WHERE id = ?', [hashed, id]);
+  res.json({ success: true, message: `Đã reset mật khẩu user về: ${newPassword}` });
+};

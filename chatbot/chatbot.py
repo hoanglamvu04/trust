@@ -22,3 +22,4 @@ def get_response(user_input, topic):
     best_idx = scores.argmax().item()
 
     return df.iloc[best_idx]['response']
+ 

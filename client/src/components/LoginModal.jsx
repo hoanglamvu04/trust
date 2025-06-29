@@ -12,7 +12,8 @@ export default function LoginModal({
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [registerForm, setRegisterForm] = useState({
     username: "", name: "", email: "",
-    password: "", confirmPassword: ""
+    password: "", confirmPassword: "",
+    nickname: ""
   });
 
   const onLogin = async () => {
@@ -110,6 +111,12 @@ export default function LoginModal({
               value={registerForm.name}
               onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
             />
+            <input
+            type="text"
+            placeholder="Biệt danh (nickname) *"
+            value={registerForm.nickname}
+            onChange={(e) => setRegisterForm({ ...registerForm, nickname: e.target.value })}
+          />
             <input
               type="email"
               placeholder="Email"

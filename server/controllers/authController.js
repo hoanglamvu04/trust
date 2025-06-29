@@ -5,29 +5,36 @@ const { v4: uuidv4 } = require('uuid');
 
 // Đăng ký
 exports.register = async (req, res) => {
-  const { username, name, email, password, confirmPassword } = req.body;
+  const { username, name, email, password, confirmPassword, nickname } = req.body;
 
-  if (!username || !name || !email || !password || !confirmPassword)
+  // Check đủ trường
+  if (!username || !name || !email || !password || !confirmPassword || !nickname)
     return res.status(400).json({ success: false, message: 'Vui lòng điền đầy đủ thông tin!' });
 
+  // Check mật khẩu
   if (password !== confirmPassword)
     return res.status(400).json({ success: false, message: 'Mật khẩu không khớp!' });
 
+  // Check nickname không trùng username
+  if (nickname.trim().toLowerCase() === username.trim().toLowerCase())
+    return res.status(400).json({ success: false, message: 'Biệt danh (nickname) không được trùng tên đăng nhập!' });
+
   try {
+    // Check username/email/nickname đã tồn tại
     const [existing] = await db.query(
-      'SELECT id FROM users WHERE username = ? OR email = ?',
-      [username, email]
+      'SELECT id FROM users WHERE username = ? OR email = ? OR nickname = ?',
+      [username, email, nickname]
     );
     if (existing.length > 0)
-      return res.status(400).json({ success: false, message: 'Tên đăng nhập hoặc email đã tồn tại!' });
+      return res.status(400).json({ success: false, message: 'Tên đăng nhập, email hoặc biệt danh đã tồn tại!' });
 
     const hashed = await bcrypt.hash(password, 10);
     const id = uuidv4();
 
-    // tokenVersion mặc định là 1, nickname để rỗng khi đăng ký, bắt user tự cập nhật
+    // tokenVersion mặc định là 1
     await db.query(
       'INSERT INTO users (id, username, name, email, password, status, roleId, tokenVersion, nickname) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [id, username, name, email, hashed, 1, 4, 1, null]
+      [id, username, name, email, hashed, 1, 4, 1, nickname]
     );
     res.json({ success: true, message: 'Đăng ký thành công!' });
   } catch (err) {

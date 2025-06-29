@@ -18,9 +18,12 @@ export default function ReportHistory() {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/report");
+        // Đã xác thực: chỉ trả về report của user hiện tại
+        const res = await fetch("http://localhost:5000/api/report", {
+          credentials: "include" // Nếu bạn dùng cookie để lưu token
+        });
         const data = await res.json();
-        setReports(data);
+        setReports(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("❌ Lỗi lấy danh sách reports:", err);
       }
@@ -40,7 +43,7 @@ export default function ReportHistory() {
         <main className="profile-info">
           <div className="prl-tt">LỊCH SỬ TỐ CÁO</div>
 
-          {/* ✅ BỌC BỘ FILTER */}
+          {/* Bộ lọc trạng thái */}
           <div className="filter-wrapper">
             <div className="status-filter">
               <button
@@ -82,7 +85,7 @@ export default function ReportHistory() {
             </div>
           </div>
 
-          {/* ✅ LIST */}
+          {/* Danh sách report */}
           <ul className="report-list">
             {filteredReports.length === 0 ? (
               <p>Không có dữ liệu.</p>
@@ -99,7 +102,6 @@ export default function ReportHistory() {
                     <h4>{r.accountName} - {r.accountNumber}</h4>
                     <div className="meta">
                       <span>{new Date(r.createdAt).toLocaleDateString()}</span>
-                      
                     </div>
                   </div>
 
@@ -107,13 +109,12 @@ export default function ReportHistory() {
                     <>
                       <button
                         className="btn-view"
-                     
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowReason(showReason === r._id ? null : r._id);
                         }}
                       >
-                      Xem lý do
+                        Xem lý do
                       </button>
                       {showReason === r._id && (
                         <p className="rejection-reason">

@@ -51,7 +51,7 @@ export default function CommentSection({ reportId }) {
   const fetchComments = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/comments/${reportId}`
+        `http://localhost:5000/api/comment/${reportId}`
       );
       const data = await res.json();
 
@@ -94,7 +94,7 @@ export default function CommentSection({ reportId }) {
       return toast.error("Bạn cần đặt biệt danh trước khi bình luận!");
 
     try {
-      const res = await fetch("http://localhost:5000/api/comments", {
+      const res = await fetch("http://localhost:5000/api/comment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -115,7 +115,7 @@ export default function CommentSection({ reportId }) {
   const handleLike = async (commentId) => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/comments/${commentId}/like`,
+        `http://localhost:5000/api/comment/${commentId}/like`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -137,7 +137,7 @@ export default function CommentSection({ reportId }) {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/comments/${commentId}/reply`,
+        `http://localhost:5000/api/comment/${commentId}/reply`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -161,7 +161,7 @@ export default function CommentSection({ reportId }) {
   const handleDeleteComment = async (commentId) => {
     if (!window.confirm("Xác nhận xoá bình luận?")) return;
     try {
-      await fetch(`http://localhost:5000/api/comments/${commentId}`, {
+      await fetch(`http://localhost:5000/api/comment/${commentId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -175,7 +175,7 @@ export default function CommentSection({ reportId }) {
     if (!window.confirm("Xác nhận xoá phản hồi?")) return;
     try {
       await fetch(
-        `http://localhost:5000/api/comments/${commentId}/reply/${index}`,
+        `http://localhost:5000/api/comment/${commentId}/reply/${index}`,
         {
           method: "DELETE",
           credentials: "include",

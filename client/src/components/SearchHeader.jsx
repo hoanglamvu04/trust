@@ -30,9 +30,16 @@ export default function SearchHeader() {
     fetchStats();
   }, []);
 
+  // Chỉ cho nhập chữ và số, không cho ký tự đặc biệt (trừ khoảng trắng nếu muốn)
+  const specialCharRegex = /[^a-zA-Z0-9]/;
+  const hasSpecialChar = specialCharRegex.test(search);
+
+  // Ít nhất 7 ký tự, chỉ chữ và số
+  const isValidInput = search.length >= 7 && !hasSpecialChar;
+
   const handleSearch = (e) => {
     e.preventDefault();
-    if (search.trim()) {
+    if (isValidInput) {
       navigate(`/check-account?search=${encodeURIComponent(search.trim())}`);
     }
   };
@@ -50,12 +57,27 @@ export default function SearchHeader() {
       <form className="search-form" onSubmit={handleSearch}>
         <input
           type="text"
-          placeholder="Nhập số tài khoản cần kiểm tra"
+          placeholder="Nhập số tài khoản hoặc bí danh cần kiểm tra"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <button type="submit">Tra cứu</button>
+        <button type="submit" disabled={!isValidInput}>Tra cứu</button>
       </form>
+      {/* Hiển thị lỗi dưới input */}
+      {search && (
+        <>
+          {hasSpecialChar && (
+            <div style={{ color: "red", marginTop: 4, fontSize: 13 }}>
+              Không được nhập ký tự đặc biệt, chỉ dùng chữ và số.
+            </div>
+          )}
+          {search.length > 0 && search.length < 7 && !hasSpecialChar && (
+            <div style={{ color: "red", marginTop: 4, fontSize: 13 }}>
+              Nhập tối thiểu 7 ký tự (chữ/số).
+            </div>
+          )}
+        </>
+      )}
 
       <div className="action-buttons">
         <button className="btn-red" onClick={() => navigate("/report")}>

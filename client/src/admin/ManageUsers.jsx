@@ -8,7 +8,7 @@ export default function ManageUsers() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [form, setForm] = useState({
-    username: "", name: "", email: "", password: "", status: 1, roleId: 4
+    username: "", name: "", email: "", password: "", nickname: "", status: 1, roleId: 4
   });
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -30,7 +30,9 @@ export default function ManageUsers() {
           if (search.trim()) {
             const s = search.toLowerCase();
             filtered = filtered.filter(u =>
-              u.username.toLowerCase().includes(s) || u.email.toLowerCase().includes(s)
+              u.username.toLowerCase().includes(s) ||
+              u.email.toLowerCase().includes(s) ||
+              (u.nickname && u.nickname.toLowerCase().includes(s))
             );
           }
           if (statusFilter) {
@@ -55,7 +57,7 @@ export default function ManageUsers() {
     const payload = { ...form };
     if (!editingUser) delete payload.status; // Khi tạo mới, status để mặc định là 1
 
-    // Chuyển status về int
+    // Chuyển status và roleId về int nếu có
     if (payload.status) payload.status = parseInt(payload.status);
     if (payload.roleId) payload.roleId = parseInt(payload.roleId);
 
@@ -68,7 +70,7 @@ export default function ManageUsers() {
       .then(json => {
         if (json.success || json.message?.includes("thành công")) {
           toast.success(editingUser ? "✅ Cập nhật user thành công!" : "✅ Thêm user thành công!");
-          setForm({ username: "", name: "", email: "", password: "", status: 1, roleId: 4 });
+          setForm({ username: "", name: "", email: "", password: "", nickname: "", status: 1, roleId: 4 });
           setEditingUser(null);
           setShowModal(false);
           fetchUsers();
@@ -96,10 +98,23 @@ export default function ManageUsers() {
       name: user.name,
       email: user.email,
       password: "",
+      nickname: user.nickname || "",
       status: user.status,
       roleId: user.roleId || 4
     });
     setShowModal(true);
+  };
+
+  // Đặt lại mật khẩu (reset về mặc định)
+  const handleResetPassword = (userId) => {
+    if (!window.confirm("Đặt lại mật khẩu cho user này về mặc định?")) return;
+    fetch(`/api/users/${userId}/reset-password`, { method: "POST" })
+      .then(res => res.json())
+      .then(json => {
+        if (json.success) toast.success(json.message);
+        else toast.warning(json.message);
+      })
+      .catch(() => toast.error("❌ Lỗi đặt lại mật khẩu!"));
   };
 
   const totalPages = Math.ceil(users.length / usersPerPage);
@@ -113,7 +128,7 @@ export default function ManageUsers() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="🔍 Tìm username hoặc email..."
+            placeholder="🔍 Tìm username, email, biệt danh..."
             style={{ flex: 1, minWidth: "220px" }}
           />
           <select
@@ -138,6 +153,7 @@ export default function ManageUsers() {
               <th>Username</th>
               <th>Họ tên</th>
               <th>Email</th>
+              <th>Biệt danh</th>
               <th>Trạng thái</th>
               <th>Ngày tạo</th>
               <th>Hành động</th>
@@ -149,6 +165,7 @@ export default function ManageUsers() {
                 <td>{user.username}</td>
                 <td>{user.name}</td>
                 <td>{user.email}</td>
+                <td>{user.nickname || ""}</td>
                 <td>
                   <select disabled value={user.status}>
                     <option value={1}>Hoạt động</option>
@@ -181,11 +198,12 @@ export default function ManageUsers() {
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3>{editingUser ? "Cập nhật Người Dùng" : " Thêm User"}</h3>
+            <h3>{editingUser ? "Cập nhật Người Dùng" : "Thêm User"}</h3>
             <form onSubmit={handleSubmit}>
               <input name="username" value={form.username} onChange={handleChange} placeholder="Username" required />
               <input name="name" value={form.name} onChange={handleChange} placeholder="Họ và tên" required />
               <input name="email" value={form.email} onChange={handleChange} placeholder="Email" required />
+              <input name="nickname" value={form.nickname} onChange={handleChange} placeholder="Biệt danh" required />
               <input
                 name="password"
                 type="password"
@@ -205,6 +223,16 @@ export default function ManageUsers() {
                     <option value={3}>Người kiểm duyệt</option>
                     <option value={4}>Người dùng</option>
                   </select>
+                  <div style={{ marginTop: 10 }}>
+                    <button
+                      type="button"
+                      className="btn-reset-password"
+                      style={{ background: "#e2a426", color: "#fff", marginRight: 8 }}
+                      onClick={() => handleResetPassword(editingUser.id)}
+                    >
+                      Đặt lại mật khẩu
+                    </button>
+                  </div>
                 </>
               )}
               <div className="modal-actions">

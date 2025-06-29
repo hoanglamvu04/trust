@@ -3,7 +3,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SidebarProfile from "../components/SidebarProfile";
 import "../styles/CommentHistory.css";
-import React from 'react';
+import React from "react";
 
 export default function CommentHistory() {
   const [comments, setComments] = useState([]);
@@ -13,13 +13,14 @@ export default function CommentHistory() {
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/comments/user", {
-          credentials: "include", // ✅ để gửi cookie session nếu dùng express-session
+        const res = await fetch("http://localhost:5000/api/comment/my", {
+          credentials: "include", // Đảm bảo gửi cookie/session
         });
 
         if (!res.ok) {
-          const err = await res.json();
-          console.error("❌ Lỗi lấy comments:", err.message);
+          const err = await res.json().catch(() => ({}));
+          console.error("❌ Lỗi lấy comments:", err.message || res.statusText);
+          setComments([]);
           return;
         }
 
@@ -32,6 +33,7 @@ export default function CommentHistory() {
         }
       } catch (err) {
         console.error("❌ Fetch comments error:", err);
+        setComments([]);
       }
     };
 
@@ -63,16 +65,24 @@ export default function CommentHistory() {
             ) : (
               currentComments.map((c) => (
                 <li
-                  key={c.id} // ✅ dùng id từ CSDL
+                  key={c.id}
+                  className="comment-item"
                   onClick={() =>
                     window.location.href = `/report/${c.reportId}#comment${c.id}`
                   }
-                  className="comment-item"
+                  style={{ cursor: "pointer" }}
+                  title="Xem bài báo cáo mà bạn đã bình luận"
                 >
-                  <p>{c.content}</p>
+                  <div style={{ fontWeight: 500 }}>
+                    📝 Bình luận: <span style={{ color: "#444" }}>{c.content}</span>
+                  </div>
                   <div className="meta">
                     <span>
-                      {new Date(c.createdAt).toLocaleDateString("vi-VN")}
+                      Biệt danh: <b>{c.nickname || "Ẩn danh"}</b>
+                    </span>{" "}
+                    •{" "}
+                    <span>
+                      Ngày: {new Date(c.createdAt).toLocaleDateString("vi-VN")}
                     </span>
                   </div>
                 </li>

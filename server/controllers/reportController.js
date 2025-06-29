@@ -1,5 +1,6 @@
 const db = require('../db');
 const { v4: uuidv4 } = require('uuid');
+const { createNotification } = require('../utils/notification');
 
 // Lấy tất cả báo cáo (mới nhất trước)
 exports.getAllReports = async (req, res) => {
@@ -45,7 +46,7 @@ exports.createReport = async (req, res) => {
   } = req.body;
 
   const id = uuidv4();
-  const status = 'approved'; // mặc định auto duyệt nếu là admin thêm
+  const status = 'pending'; // mặc định auto duyệt nếu là admin thêm
 
   try {
     await db.query(
@@ -71,22 +72,33 @@ exports.createReport = async (req, res) => {
 
 // Cập nhật trạng thái báo cáo (duyệt / từ chối)
 exports.updateReportStatus = async (req, res) => {
-  const { id } = req.params;
-  const { status, rejectionReason } = req.body;
+  const reportId = req.params.id;
+  const { newStatus } = req.body; // approved, rejected
 
-  try {
-    const [result] = await db.query(
-      'UPDATE reports SET status = ?, rejectionReason = ? WHERE id = ?',
-      [status, rejectionReason || null, id]
-    );
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Không tìm thấy báo cáo!' });
-    }
-    res.json({ message: 'Cập nhật trạng thái thành công.' });
-  } catch (err) {
-    console.error('❌ Lỗi cập nhật trạng thái:', err);
-    res.status(500).json({ message: 'Lỗi server!' });
-  }
+  // Update trạng thái bài viết
+  await db.query('UPDATE reports SET status = ? WHERE id = ?', [newStatus, reportId]);
+
+  // Lấy chủ bài viết
+  const [reportRows] = await db.query('SELECT id, userId, title FROM reports WHERE id = ?', [reportId]);
+  if (!reportRows.length) return res.status(404).json({ message: 'Không tìm thấy bài viết.' });
+
+  const ownerId = reportRows[0].userId;
+  const title = reportRows[0].title;
+
+  let statusText = '';
+  if (newStatus === 'approved') statusText = 'đã được duyệt';
+  else if (newStatus === 'rejected') statusText = 'đã bị từ chối';
+  else statusText = `cập nhật trạng thái: ${newStatus}`;
+
+  // Tạo thông báo
+  await createNotification({
+    userId: ownerId,
+    type: 'report',
+    content: `Bài viết "${title}" ${statusText}.`,
+    link: `/report/${reportId}`,
+  });
+
+  res.json({ message: 'Cập nhật trạng thái thành công!' });
 };
 
 // Cập nhật nội dung báo cáo (dành cho Admin sửa)
@@ -149,5 +161,17 @@ exports.getReportsByAccountNumber = async (req, res) => {
   } catch (err) {
     console.error('❌ Lỗi lấy báo cáo theo account:', err);
     res.status(500).json({ message: 'Lỗi server!' });
+  }
+};
+
+// controllers/reportController.js
+exports.getMyReports = async (req, res) => {
+  const userId = req.user.id; // Lấy id từ token (middleware đã gán)
+  try {
+    const [reports] = await db.query('SELECT * FROM reports WHERE userId = ?', [userId]);
+    res.json(reports);
+  } catch (err) {
+    console.error("❌ getMyReports error:", err);
+    res.status(500).json({ success: false, message: "Lỗi server khi lấy report!" });
   }
 };

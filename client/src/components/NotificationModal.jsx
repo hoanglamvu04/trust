@@ -3,7 +3,7 @@ import "./NotificationModal.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-export default function NotificationModal({ show, onClose, currentUserId }) {
+export default function NotificationModal({ show, onClose }) {
   const [activeTab, setActiveTab] = useState("report");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmAction, setConfirmAction] = useState(() => () => {});
@@ -12,8 +12,15 @@ export default function NotificationModal({ show, onClose, currentUserId }) {
 
   useEffect(() => {
     if (!show) return;
-    fetch(`/api/notifications?type=${activeTab}&userId=${currentUserId}`)
-      .then((res) => res.json())
+
+    fetch(`/api/notifications?type=${activeTab}`, {
+      method: "GET",
+      credentials: "include", // Gửi cookie session lên server
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
       .then((data) => {
         if (activeTab === "report") {
           setReportNotifications(data);
@@ -22,11 +29,11 @@ export default function NotificationModal({ show, onClose, currentUserId }) {
         }
       })
       .catch(() => toast.error("Không thể tải dữ liệu thông báo."));
-  }, [activeTab, show, currentUserId]);
+  }, [activeTab, show]);
 
   const handleMarkAllRead = () => {
     const list = activeTab === "report" ? reportNotifications : commentNotifications;
-    list.forEach((n) => handleMarkAsRead(n._id));
+    list.forEach((n) => handleMarkAsRead(n.id)); // dùng `id` thay vì `_id`
   };
 
   const confirmAndExecute = (action) => {
@@ -36,9 +43,12 @@ export default function NotificationModal({ show, onClose, currentUserId }) {
 
   const handleDeleteAll = () => {
     confirmAndExecute(() => {
-      fetch(`/api/notifications?type=${activeTab}&userId=${currentUserId}`, { method: "DELETE" })
-        .then((res) => res.json())
-        .then(() => {
+      fetch(`/api/notifications?type=${activeTab}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error();
           if (activeTab === "report") {
             setReportNotifications([]);
           } else {
@@ -52,13 +62,16 @@ export default function NotificationModal({ show, onClose, currentUserId }) {
 
   const handleDelete = (id) => {
     confirmAndExecute(() => {
-      fetch(`/api/notifications/${id}`, { method: "DELETE" })
-        .then((res) => res.json())
-        .then(() => {
+      fetch(`/api/notifications/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error();
           if (activeTab === "report") {
-            setReportNotifications((prev) => prev.filter((n) => n._id !== id));
+            setReportNotifications((prev) => prev.filter((n) => n.id !== id));
           } else {
-            setCommentNotifications((prev) => prev.filter((n) => n._id !== id));
+            setCommentNotifications((prev) => prev.filter((n) => n.id !== id));
           }
           toast.success("Đã xóa thông báo.");
         })
@@ -67,16 +80,19 @@ export default function NotificationModal({ show, onClose, currentUserId }) {
   };
 
   const handleMarkAsRead = (id) => {
-    fetch(`/api/notifications/${id}/read`, { method: "PATCH" })
-      .then((res) => res.json())
-      .then(() => {
+    fetch(`/api/notifications/${id}/read`, {
+      method: "PATCH",
+      credentials: "include",
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error();
         if (activeTab === "report") {
           setReportNotifications((prev) =>
-            prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
+            prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
           );
         } else {
           setCommentNotifications((prev) =>
-            prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
+            prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
           );
         }
       })
@@ -107,12 +123,12 @@ export default function NotificationModal({ show, onClose, currentUserId }) {
             <p>Không có thông báo.</p>
           ) : (
             currentList.map((n) => (
-              <div key={n._id} className="notificationmodal-item">
-                <a href={n.link} onClick={() => handleMarkAsRead(n._id)} className="notificationmodal-link">
+              <div key={n.id} className="notificationmodal-item">
+                <a href={n.link} onClick={() => handleMarkAsRead(n.id)} className="notificationmodal-link">
                   {n.content}
                 </a>
                 {!n.isRead && <span className="notificationmodal-dot"></span>}
-                <button className="notificationmodal-delete-btn" onClick={() => handleDelete(n._id)}>
+                <button className="notificationmodal-delete-btn" onClick={() => handleDelete(n.id)}>
                   <img src="/images/bin.png" alt="delete" />
                 </button>
               </div>

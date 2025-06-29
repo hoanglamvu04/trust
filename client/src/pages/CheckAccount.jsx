@@ -20,12 +20,14 @@ export default function CheckAccount() {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/report");
+       const res = await fetch("http://localhost:5000/api/report/all");
         const data = await res.json();
         if (Array.isArray(data)) {
           const unique = Array.from(new Map(data.map(r => [r.id, r])).values());
-          const sorted = unique.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          const approvedReports = unique.filter(r => String(r.status).toLowerCase() === 'approved');
+          const sorted = approvedReports.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
           setAllReports(sorted);
+
         } else {
           console.error("API không trả về array:", data);
         }
