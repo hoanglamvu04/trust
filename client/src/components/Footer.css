@@ -3,6 +3,8 @@
   color: #ffffff;
   padding: 30px 20px;
   font-size: 14px;
+  max-width: 1500px;
+  margin: 0 auto;
 }
 
 .footer-links {

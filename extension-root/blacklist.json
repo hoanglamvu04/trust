@@ -2,6 +2,7 @@
   "blacklist": [
     "facebook.com",
     "badwebsite.com",
-    "xample.com"
+    "xample.com",
+    "secure.imvu.com"
   ]
 }

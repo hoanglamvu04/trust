@@ -16,10 +16,11 @@ a {
 }
 
 .home-title {
-  font-size: 3rem;
-  font-weight: 700;
+  margin: 0;
 }
-
+.home-title img{
+  width: 350px;
+}
 .home-desc {
   font-size: 1.2rem;
   color: #555;

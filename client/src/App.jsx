@@ -10,7 +10,8 @@ function App() {
       <Header />
 
       <div className="home-container">
-        <h1 className="home-title">🔐 <span style={{ color: "#007aff" }}>TrustCheck</span></h1>
+         <h1 className="home-title">
+              <img src="/images/logoweb.png" alt="hm" /></h1>
         <p className="home-desc">
           Nơi bạn kiểm tra – tố cáo – bảo vệ cộng đồng khỏi các hành vi lừa đảo.
         </p>

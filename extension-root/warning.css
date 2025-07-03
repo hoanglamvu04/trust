@@ -1,0 +1,131 @@
+body {
+  font-family: 'Segoe UI', Arial, Tahoma, sans-serif;
+  background: #f6faf7;
+  color: #185c37;
+  margin: 0;
+}
+
+.trust-warning__container {
+  width: 80%;
+  margin: 60px auto;
+  padding: 36px 26px 24px 26px;
+  border-radius: 18px;
+  background: #fff;
+  border: 2.5px solid #6dd672;
+  box-shadow: 0 2px 24px #80e2911a;
+  text-align: center;
+  position: relative;
+}
+
+.trust-warning__icon {
+  font-size: 64px;
+  margin-bottom: 18px;
+  color: #23b04a;
+  filter: drop-shadow(0 0 10px #9ee1ae88);
+}
+
+.trust-warning__title {
+  font-size: 27px;
+  margin-bottom: 8px;
+  color: #0d7a37;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.trust-warning__desc {
+  margin: 14px 0 28px 0;
+  font-size: 16px;
+  color: #185c37;
+  line-height: 1.5;
+}
+
+.trust-warning__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.tw-btn {
+  min-width: 210px;
+  padding: 12px 0;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+  margin-bottom: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.15s, color 0.15s, border 0.15s;
+  box-shadow: 0 2px 8px #52d18218;
+}
+
+.tw-btn-green {
+  background: linear-gradient(90deg,#6de182 60%,#27e69a 100%);
+  color: #14572c;
+  border: 2px solid #47cf56;
+}
+.tw-btn-green:hover { background: #47cf56; color: #fff; }
+
+.tw-btn-outline-green {
+  background: #fff;
+  color: #19ad4c;
+  border: 2px solid #19ad4c;
+}
+.tw-btn-outline-green:hover { background: #19ad4c; color: #fff; }
+
+.tw-btn-outline-grey {
+  background: #fff;
+  color: #888;
+  border: 2px solid #aaa;
+}
+.tw-btn-outline-grey:hover { background: #d7d7d7; color: #185c37; }
+
+.tw-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#timed-allow {
+  padding: 8px 10px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: 1.5px solid #24bb50;
+  color: #14572c;
+  background: #e7fbe9;
+  outline: none;
+  margin-left: 3px;
+  margin-right: 3px;
+}
+
+.trust-warning__manage {
+  margin-top: 14px;
+  display: inline-block;
+  color: #0d9958;
+  text-decoration: underline;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.13s;
+}
+.trust-warning__manage:hover {
+  color: #1ec572;
+}
+
+.trust-warning__footer {
+  margin-top: 22px;
+  font-size: 14px;
+  color: #499c68;
+  background: #e6fbe4;
+  padding: 14px 10px 7px 10px;
+  border-radius: 7px;
+  border-left: 5px solid #2ac05d;
+  text-align: left;
+}
+
+@media (max-width: 600px) {
+  .trust-warning__container { max-width: 95vw; padding: 14px 4vw; }
+  .trust-warning__title { font-size: 22px; }
+  .tw-btn { min-width: 100px; font-size: 14px;}
+}

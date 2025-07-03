@@ -1,19 +1,41 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Cảnh báo an toàn</title>
-    <style>
-      body { font-family: sans-serif; text-align: center; padding-top: 100px; }
-      button { margin: 10px; padding: 10px 30px; font-size: 18px; }
-    </style>
-  </head>
-  <body>
-    <h2>Trang web này nằm trong danh sách không an toàn!</h2>
-    <p>Bạn có muốn tiếp tục truy cập không?</p>
-    <button id="yes">Có</button>
-    <button id="no">Không</button>
-    <a href="manage.html" target="_blank" id="manage-link">Quản lý danh sách luôn cho phép</a>
-    <script src="warning.js"></script>
-  </body>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Cảnh báo truy cập không an toàn</title>
+  <link rel="stylesheet" href="warning.css">
+</head>
+<body>
+  <div class="trust-warning__container">
+    <div class="trust-warning__icon">&#9888;</div>
+    <h1 class="trust-warning__title">Cảnh báo an toàn</h1>
+    <div class="trust-warning__desc">
+      Kết nối tới <span id="domain"></span> có thể không an toàn.<br>
+      Trang web này nằm trong danh sách cảnh báo rủi ro.<br>
+      Hãy cân nhắc trước khi tiếp tục.
+    </div>
+    <div class="trust-warning__actions">
+      <button id="btn-once" class="tw-btn tw-btn-green">Chỉ cho phép lần này</button>
+      <div class="tw-actions-group">
+        <span>Tiếp tục & tắt cảnh báo trong</span>
+        <select id="timed-allow">
+          <option value="1">1 giờ</option>
+          <option value="3">3 giờ</option>
+          <option value="5">5 giờ</option>
+          <option value="7">7 giờ</option>
+          <option value="12">12 giờ</option>
+          <option value="24">24 giờ</option>
+        </select>
+        <button id="btn-time" class="tw-btn tw-btn-outline-green">Xác nhận</button>
+      </div>
+      <button id="btn-always" class="tw-btn tw-btn-outline-green">Luôn cho phép và tắt cảnh báo</button>
+      <button id="btn-cancel" class="tw-btn tw-btn-outline-grey">Quay lại trang an toàn</button>
+    </div>
+    <a href="manage.html" class="trust-warning__manage" target="_blank">Quản lý danh sách cho phép</a>
+    <div class="trust-warning__footer">
+      <b>Lưu ý:</b> Chỉ nên tiếp tục nếu bạn hiểu rõ rủi ro. Đừng cung cấp mật khẩu hay thông tin cá nhân trên trang này nếu bạn không chắc chắn.
+    </div>
+  </div>
+  <script src="warning.js"></script>
+</body>
 </html>

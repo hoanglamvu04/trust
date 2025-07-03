@@ -1,196 +1,100 @@
-// File: src/pages/CheckWebsite.jsx
 import React, { useState } from "react";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import "../styles/CheckWebsite.css";
+import axios from "axios";
 
-const dummyData = [
-  {
-    domain: "amazou2.com",
-    status: "Đang xử lý",
-    field: "Thương mại điện tử",
-    type: "Website",
-    label: "Mạo danh",
-    date: "2025-02-12",
-    official: "https://amazon.com",
-  },
-  {
-    domain: "muacard.online",
-    status: "Đang xử lý",
-    field: "Ngân hàng - Tài chính",
-    type: "Website",
-    label: "Lừa đảo",
-    date: "2025-02-12",
-    official: "",
-  },
-  {
-    domain: "shoplazada.xyz",
-    status: "Đang xử lý",
-    field: "Thương mại điện tử",
-    type: "Website",
-    label: "Trang giả",
-    date: "2025-01-17",
-    official: "https://www.lazada.vn",
-  },
-  {
-    domain: "zalo-fake.info",
-    status: "Đang chờ",
-    field: "Dịch vụ trực tuyến",
-    type: "Mạng xã hội",
-    label: "Mạo danh",
-    date: "2025-01-16",
-    official: "https://zalo.me",
-  },
-  {
-    domain: "appfakebanking.com",
-    status: "Đã xử lý",
-    field: "Ngân hàng - Tài chính",
-    type: "Website",
-    label: "Lừa đảo",
-    date: "2025-01-15",
-    official: "",
-  },
-  {
-    domain: "fakenews.site",
-    status: "Đang xử lý",
-    field: "Báo chí",
-    type: "Website",
-    label: "Trang giả",
-    date: "2025-01-10",
-    official: "",
-  },
-];
+export default function CheckWebsiteTrust() {
+  const [inputUrl, setInputUrl] = useState("");
+  const [score, setScore] = useState(null);
+  const [details, setDetails] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-export default function CheckWebsite() {
-  const [search, setSearch] = useState("");
-  const [fieldFilter, setFieldFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
-  const [labelFilter, setLabelFilter] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const extractDomain = (input) => {
+    try {
+      const hasProtocol = input.startsWith("http://") || input.startsWith("https://");
+      const urlObj = new URL(hasProtocol ? input : `http://${input}`);
+      return urlObj.hostname.replace(/^www\./, "");
+    } catch {
+      return null;
+    }
+  };
 
-  const filtered = dummyData.filter((item) => {
-    return (
-      item.domain.toLowerCase().includes(search.toLowerCase()) &&
-      (!fieldFilter || item.field === fieldFilter) &&
-      (!statusFilter || item.status === statusFilter) &&
-      (!typeFilter || item.type === typeFilter) &&
-      (!labelFilter || item.label === labelFilter)
-    );
-  });
+  const handleCheck = async () => {
+    const domain = extractDomain(inputUrl);
+    if (!domain) {
+      setError("Tên miền hoặc URL không hợp lệ.");
+      return;
+    }
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginatedData = filtered.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+    setError(null);
+    setLoading(true);
+    setScore(null);
+    setDetails(null);
+
+    try {
+      const res = await axios.post("/api/trust-score", { domain });
+      setScore(res.data.score);
+      setDetails(res.data.details);
+    } catch (err) {
+      console.error(err);
+      setError("Không thể đánh giá. Lỗi: " + (err.response?.data?.error || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getColor = (score) => {
+    if (score >= 80) return "green";
+    if (score >= 50) return "orange";
+    return "red";
+  };
 
   return (
-    <>
-      <Header />
-      <div className="check-website-layout">
-        <div className="filter-sidebar sticky">
-          <h2>Tra cứu website</h2>
-          <input
-            type="text"
-            placeholder="Nhập tên lừa đảo..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+    <div style={{ padding: "2rem", maxWidth: "600px", margin: "auto" }}>
+      <h2>🔍 Đánh giá độ tin cậy website (thang điểm 100)</h2>
+      <input
+        type="text"
+        placeholder="Nhập URL hoặc domain (vd: facebook.com)"
+        value={inputUrl}
+        onChange={(e) => setInputUrl(e.target.value)}
+        style={{ padding: "0.5rem", width: "100%" }}
+      />
+      <button
+        onClick={handleCheck}
+        style={{ marginTop: "1rem", padding: "0.5rem 1rem" }}
+      >
+        Kiểm tra
+      </button>
 
-          <label>Lĩnh vực</label>
-          <select onChange={(e) => setFieldFilter(e.target.value)}>
-            <option value="">-- Tất cả --</option>
-            <option>Thương mại điện tử</option>
-            <option>Ngân hàng - Tài chính</option>
-            <option>Cơ quan - Doanh nghiệp</option>
-            <option>Tổ chức nhà nước</option>
-            <option>Dịch vụ trực tuyến</option>
-            <option>Mạng xã hội</option>
-            <option>Báo chí</option>
-          </select>
+      {loading && <p>⏳ Đang kiểm tra...</p>}
 
-          <label>Tình trạng</label>
-          <select onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="">-- Tất cả --</option>
-            <option>Đang chờ</option>
-            <option>Đang xử lý</option>
-            <option>Đã xử lý</option>
-          </select>
-
-          <label>Loại</label>
-          <select onChange={(e) => setTypeFilter(e.target.value)}>
-            <option value="">-- Tất cả --</option>
-            <option>Website</option>
-            <option>Mạng xã hội</option>
-          </select>
-
-          <label>Phân loại</label>
-          <select onChange={(e) => setLabelFilter(e.target.value)}>
-            <option value="">-- Tất cả --</option>
-            <option>Mạo danh</option>
-            <option>Lừa đảo</option>
-            <option>Trang giả</option>
-          </select>
-        </div>
-
-        <div className="result-list">
-          <h2 className="result-header">Kết quả phát hiện</h2>
-          {paginatedData.map((item, idx) => (
-            <div className="result-card modern" key={idx}>
-              <div className="result-left">
-                <img src="/images/web-icon.png" alt="web icon" className="result-icon" />
-              </div>
-              <div className="result-center">
-                <div className="domain-name">{item.domain}</div>
-                <div className="date-found">Phát hiện: {item.date}</div>
-                <div className="label-field">Loại: {item.label} | {item.field}</div>
-                <div className="official">
-                  Website chính thức: {item.official ? (
-                    <a href={item.official} target="_blank" rel="noopener noreferrer">
-                      {item.official}
-                    </a>
-                  ) : "Không xác định"}
-                </div>
-              </div>
-              <div className="result-right">
-                <span className="status-badge">
-                  <img
-                    src={
-                      item.status === "Đã xử lý"
-                        ? "/images/status/done.png"
-                        : item.status === "Đang xử lý"
-                        ? "/images/status/processing.png"
-                        : "/images/status/pending.png"
-                    }
-                    alt="status"
-                    className="status-icon"
-                  />
-                  {item.status}
-                </span>
-              </div>
-            </div>
-          ))}
-
-          {filtered.length === 0 && <p>Không tìm thấy kết quả phù hợp.</p>}
-
-          {totalPages > 1 && (
-            <div className="pagination">
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button
-                  key={i}
-                  className={currentPage === i + 1 ? "active" : ""}
-                  onClick={() => setCurrentPage(i + 1)}
-                >
-                  {i + 1}
-                </button>
-              ))}
+      {score !== null && (
+        <div style={{ marginTop: "1rem", color: getColor(score) }}>
+          <h3>✅ Điểm tin cậy: {score}/100</h3>
+          <ul>
+            {Object.entries(details || {}).map(([k, v]) => (
+              <li key={k}>
+                <strong>{k}:</strong> {String(v)}
+              </li>
+            ))}
+          </ul>
+          {score < 50 && (
+            <div
+              style={{
+                marginTop: "1rem",
+                background: "#ffe6e6",
+                padding: "1rem",
+                border: "1px solid red",
+              }}
+            >
+              ⚠️ Website có độ tin cậy thấp. Bạn có chắc muốn truy cập?
             </div>
           )}
         </div>
-      </div>
-      <Footer />
-    </>
+      )}
+
+      {error && (
+        <p style={{ color: "red", marginTop: "1rem" }}>❌ {error}</p>
+      )}
+    </div>
   );
 }

@@ -159,7 +159,7 @@ export default function Header() {
       <header className="header">
         <div className="container">
           <div className="logo">
-            <Link to="/">🔐 TrustCheck</Link>
+            <Link to="/"> <img src="/images/logoweb.png" alt="hm" /></Link>
           </div>
           <nav>
             <Link to="/check-account">Tra cứu STK</Link>

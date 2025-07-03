@@ -1,0 +1,105 @@
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f8fcfa;
+  margin: 0;
+  padding: 0;
+}
+.login-container {
+  width: 330px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px #54e8ad1a;
+  padding: 26px 22px 16px 22px;
+  margin-top: 14px;
+  text-align: center;
+}
+.logo-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.logo {
+  width: 36px;
+  height: 36px;
+}
+.title {
+  font-size: 22px;
+  color: #18ae7d;
+  font-weight: bold;
+  letter-spacing: 0.8px;
+}
+.desc {
+  color: #158856;
+  margin-bottom: 16px;
+  font-size: 15px;
+}
+#loginForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#loginForm input {
+  padding: 11px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #27de8e;
+  background: #f6fcf9;
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+#loginBtn {
+  background: linear-gradient(90deg, #45ebae 60%, #0db077 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 7px;
+  padding: 11px 0;
+  margin-top: 8px;
+  margin-bottom: 2px;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+#loginBtn:hover {
+  background: #18ae7d;
+}
+#msg {
+  min-height: 24px;
+  color: #e14444;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+.more-choice {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.more-choice button {
+  background: #e6f6f0;
+  border: 1.2px solid #0db077;
+  color: #0db077;
+  border-radius: 6px;
+  padding: 7px 13px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.17s, color 0.17s;
+}
+.more-choice button:hover {
+  background: #0db077;
+  color: #fff;
+}
+.footer {
+  margin-top: 10px;
+  font-size: 13px;
+}
+.footer a {
+  color: #18ae7d;
+  text-decoration: underline;
+}
+@media (max-width: 400px) {
+  .login-container { width: 97vw; }
+  .logo-row .title { font-size: 18px; }
+}

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đăng nhập TrustCheck</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo-row">
+      <span class="title">TrustCheck</span>
+    </div>
+    <div class="desc">Vui lòng đăng nhập để sử dụng tiện ích.</div>
+    <form id="loginForm" autocomplete="off">
+      <input type="text" id="username" placeholder="Tên đăng nhập" required>
+      <input type="password" id="password" placeholder="Mật khẩu" required>
+      <button type="submit" id="loginBtn">Đăng nhập</button>
+    </form>
+    <div id="msg"></div>
+    <div class="more-choice">
+      <button id="skipBtn">Không đăng nhập</button>
+      <button id="remindBtn">Nhắc lại sau</button>
+    </div>
+    <div class="footer">
+      <a href="https://trustcheck.com/register" target="_blank">Chưa có tài khoản?</a>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

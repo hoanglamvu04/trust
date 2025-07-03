@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
+const axios = require('axios');
 require('dotenv').config();
 
 const db = require('./db');
@@ -13,7 +14,12 @@ app.set('trust proxy', true);
 
 // ✅ CORS cấu hình để gửi cookie từ localhost:5173
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',
+    /^chrome-extension:\/\/[a-z]+$/, // Cho phép mọi extension Chrome (dev)
+    /^edge-extension:\/\/[a-z]+$/,   // Nếu test trên Edge
+    'http://localhost:5000'
+  ],
   credentials: true,
 }));
 
@@ -55,6 +61,32 @@ app.use('/api/notifications', require('./routes/notification'));
 app.use('/api/check-domain', require('./routes/checkDomain'));
 app.use('/api', require('./routes/analyzeRoute'));
 
+// ✅ API trung gian gọi urlscan.io
+
+app.post('/api/urlscan', async (req, res) => {
+  try {
+    const scanRes = await axios.post(
+      'https://urlscan.io/api/v1/scan/',
+      {
+        url: req.body.url,
+        visibility: 'public',
+      },
+      {
+        headers: {
+          'API-Key': process.env.URLSCAN_API_KEY,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    res.json(scanRes.data);
+  } catch (error) {
+    console.error('🔴 urlscan.io error:', error?.response?.data || error.message);
+    res.status(500).json({ error: error?.response?.data || 'Unknown error from urlscan.io' });
+  }
+});
+
+
 // ✅ Phục vụ frontend React (build ra dist/)
 const distPath = path.join(__dirname, '../client/dist');
 app.use(express.static(distPath));
@@ -74,4 +106,19 @@ app.listen(PORT, async () => {
   }
 
   console.log(`🚀 Server running on port ${PORT}`);
+});
+
+const trustScoreService = require('./services/trustScoreServices');
+
+app.post('/api/trust-score', async (req, res) => {
+  try {
+    const { domain } = req.body;
+    if (!domain) return res.status(400).json({ error: 'Missing domain' });
+
+    const scoreData = await trustScoreService.calculateTrustScore(domain);
+    res.json(scoreData);
+  } catch (error) {
+    console.error("Trust Score Error:", error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
 });
