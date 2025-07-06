@@ -25,7 +25,7 @@ export default function ManageComments() {
       reportId: filterReportId,
     }).toString();
 
-    fetch(`/api/admin/comments?${query}`)
+    fetch(`/api/admin/comment?${query}`)
       .then((res) => res.json())
       .then((data) => {
         // Always parse likes/replies to array

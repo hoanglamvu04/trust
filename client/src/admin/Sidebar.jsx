@@ -4,11 +4,11 @@ import React, { useState } from 'react';
 
 export default function Sidebar({ collapsed, setCollapsed }) {
   const navItems = [
-    { to: "/admin/dashboard", icon: "🏠", label: "Dashboard" },
-    { to: "/admin/users", icon: "👥", label: "Quản lý Users" },
-    { to: "/admin/reports", icon: "⚠️", label: "Quản lý Reports" },
-    { to: "/admin/comments", icon: "💬", label: "Quản lý Comments" },
-    { to: "/admin/contacts", icon: "📨", label: "Quản lý Contacts" },
+    { to: "/admin/dashboard", icon: "🏠", label: "Hệ Thống" },
+    { to: "/admin/users", icon: "👥", label: "Quản lý Người Dùng" },
+    { to: "/admin/reports", icon: "⚠️", label: "Quản lý Cảnh Báo" },
+    { to: "/admin/comments", icon: "💬", label: "Quản lý Bình Luận" },
+    { to: "/admin/contacts", icon: "📨", label: "Quản lý Liên Hệ" },
   ];
 
   return (
