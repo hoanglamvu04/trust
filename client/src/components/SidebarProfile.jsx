@@ -15,7 +15,7 @@ export default function SidebarProfile({ active }) {
           className={`sidebar-profile-item ${active === "report" ? "sidebar-profile-active" : ""}`}
           onClick={() => (window.location.href = "/report-history")}
         >
-          📄 Lịch sử tố cáo
+          📄 Quản lý nội dung
         </li>
         <li
           className={`sidebar-profile-item ${active === "comment" ? "sidebar-profile-active" : ""}`}

@@ -48,7 +48,7 @@ app.use('/api/facebook', require('./routes/facebookAccount'));
 app.use('/api/report-detail', require('./routes/reportDetail'));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/report', require('./routes/report'));
-app.use('/api/ratings', require('./routes/rating'));
+app.use('/api/rating', require('./routes/rating'));
 app.use('/api/searchlog', require('./routes/searchLog'));
 app.use('/api/comment', require('./routes/comment'));
 app.use('/api/stats', require('./routes/stats'));
@@ -60,6 +60,16 @@ app.use('/api/admin/reports', require('./routes/adminReport'));
 app.use('/api/notifications', require('./routes/notification'));
 app.use('/api/check-domain', require('./routes/checkDomain'));
 app.use('/api', require('./routes/analyzeRoute'));
+app.use('/api/trust-score', require('./routes/trustScore'));
+app.use('/api/admin/categories', require('./routes/adminCategory'));
+app.use('/api/admin/tests', require('./routes/adminTest'));
+app.use('/api/admin/questions', require('./routes/adminQuestion'));
+app.use('/api/test-sessions', require('./routes/testSession')); 
+app.use("/api/categories", require("./routes/category"));
+app.use("/api/tests", require("./routes/test"));
+app.use("/api/questions", require("./routes/question"));
+app.use('/api/user-results', require('./routes/userResultRoute'));
+app.use("/api/admin-answers", require("./routes/answers"));
 
 // ✅ API trung gian gọi urlscan.io
 
@@ -108,7 +118,7 @@ app.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
 
-const trustScoreService = require('./services/trustScoreServices');
+const trustScoreService = require('./services/trustScoreService');
 
 app.post('/api/trust-score', async (req, res) => {
   try {

@@ -1,15 +1,21 @@
 const db = require('../db');
 const { v4: uuidv4 } = require('uuid');
-const getIp = require('../middlewares/getIp');
 
 // Lấy tổng số sao theo accountNumber
 exports.getRatingSummary = async (req, res) => {
   const { account } = req.params;
   try {
-    const [rows] = await db.query('SELECT * FROM ratings WHERE accountNumber = ?', [account]);
-    if (rows.length === 0) {
-      return res.json({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
-    }
+    const [rows] = await db.query(`
+      SELECT 
+        COALESCE(SUM(CASE WHEN rating = 1 THEN 1 END), 0) AS rating_1,
+        COALESCE(SUM(CASE WHEN rating = 2 THEN 1 END), 0) AS rating_2,
+        COALESCE(SUM(CASE WHEN rating = 3 THEN 1 END), 0) AS rating_3,
+        COALESCE(SUM(CASE WHEN rating = 4 THEN 1 END), 0) AS rating_4,
+        COALESCE(SUM(CASE WHEN rating = 5 THEN 1 END), 0) AS rating_5
+      FROM user_votes
+      WHERE accountNumber = ?
+    `, [account]);
+
     const r = rows[0];
     res.json({
       1: r.rating_1,
@@ -24,74 +30,83 @@ exports.getRatingSummary = async (req, res) => {
   }
 };
 
-// Vote sao hoặc cập nhật sao mới
+// Vote hoặc cập nhật vote
 exports.vote = async (req, res) => {
   const { account } = req.params;
-  const { rating, userId } = req.body;
-  const ip = getIp(req);
+  const { rating } = req.body;
+  const userId = req.session.user && req.session.user.id;
 
-  if (!rating || rating < 1 || rating > 5) {
+  if (!userId) {
+    return res.status(401).json({ message: "Bạn cần đăng nhập để vote!" });
+  }
+  if (![1,2,3,4,5].includes(rating)) {
     return res.status(400).json({ message: "Rating không hợp lệ!" });
   }
 
   try {
-    // Kiểm tra đã từng vote chưa
-    const [logRows] = await db.query(
-      'SELECT * FROM rating_logs WHERE accountNumber = ? AND (userId = ? OR ip = ?)',
-      [account, userId || null, ip]
+    // Kiểm tra đã vote chưa
+    const [[existing]] = await db.query(
+      'SELECT rating FROM user_votes WHERE accountNumber = ? AND userId = ?',
+      [account, userId]
     );
 
-    if (logRows.length > 0) {
-      const prevRating = logRows[0].rating;
-
-      if (prevRating === rating) {
+    if (existing) {
+      if (existing.rating === rating) {
         return res.json({ message: "Bạn đã vote rồi!" });
       }
-
-      // Giảm điểm cũ
+      // Cập nhật điểm cũ -> điểm mới trong bảng ratings
       await db.query(
-        `UPDATE ratings SET rating_${prevRating} = GREATEST(rating_${prevRating} - 1, 0) WHERE accountNumber = ?`,
+        `UPDATE ratings 
+         SET rating_${existing.rating} = GREATEST(rating_${existing.rating} - 1, 0)
+         WHERE accountNumber = ?`,
         [account]
       );
-
-      // Tăng điểm mới
       await db.query(
-        `UPDATE ratings SET rating_${rating} = rating_${rating} + 1 WHERE accountNumber = ?`,
+        `UPDATE ratings 
+         SET rating_${rating} = rating_${rating} + 1
+         WHERE accountNumber = ?`,
         [account]
       );
-
-      // Cập nhật log
+      // Update vote
       await db.query(
-        `UPDATE rating_logs SET rating = ?, updatedAt = CURRENT_TIMESTAMP WHERE accountNumber = ? AND (userId = ? OR ip = ?)`,
-        [rating, account, userId || null, ip]
+        `UPDATE user_votes 
+         SET rating = ?, updatedAt = NOW()
+         WHERE accountNumber = ? AND userId = ?`,
+        [rating, account, userId]
       );
-
       return res.json({ message: "Đã cập nhật đánh giá!" });
     }
 
-    // Nếu chưa vote lần nào:
-    // 1. Tạo record ratings nếu chưa có
-    const [ratingRow] = await db.query('SELECT * FROM ratings WHERE accountNumber = ?', [account]);
-    if (ratingRow.length === 0) {
+    // Nếu chưa từng vote lần nào
+    // Tạo ratings nếu chưa có
+    const [[r0]] = await db.query(
+      'SELECT 1 FROM ratings WHERE accountNumber = ?',
+      [account]
+    );
+    if (!r0) {
       await db.query(
-        `INSERT INTO ratings (accountNumber, rating_${rating}) VALUES (?, 1)`,
-        [account]
-      );
-    } else {
-      await db.query(
-        `UPDATE ratings SET rating_${rating} = rating_${rating} + 1 WHERE accountNumber = ?`,
+        `INSERT INTO ratings 
+           (accountNumber, rating_1, rating_2, rating_3, rating_4, rating_5)
+         VALUES (?, 0, 0, 0, 0, 0)`,
         [account]
       );
     }
-
-    // 2. Ghi log
+    // Tăng điểm
     await db.query(
-      `INSERT INTO rating_logs (id, userId, accountNumber, rating, ip, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
-      [uuidv4(), userId || null, account, rating, ip]
+      `UPDATE ratings 
+         SET rating_${rating} = rating_${rating} + 1
+       WHERE accountNumber = ?`,
+      [account]
     );
-
+    // Ghi user_votes
+    await db.query(
+      `INSERT INTO user_votes 
+         (id, userId, accountNumber, rating, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, NOW(), NOW())`,
+      [uuidv4(), userId, account, rating]
+    );
     res.status(201).json({ message: "Đã vote!" });
+
   } catch (err) {
     console.error("❌ Lỗi vote:", err);
     res.status(500).json({ message: "Lỗi server!" });
@@ -101,37 +116,46 @@ exports.vote = async (req, res) => {
 // Huỷ vote
 exports.unvote = async (req, res) => {
   const { account } = req.params;
-  const { rating, userId } = req.body;
-  const ip = getIp(req);
+  const userId = req.session.user && req.session.user.id;
+
+  if (!userId) {
+    return res.status(401).json({ message: "Bạn cần đăng nhập để huỷ vote!" });
+  }
 
   try {
-    // Kiểm tra log
-    const [logs] = await db.query(
-      'SELECT * FROM rating_logs WHERE accountNumber = ? AND (userId = ? OR ip = ?)',
-      [account, userId || null, ip]
+    // Kiểm tra đã vote chưa
+    const [[existing]] = await db.query(
+      'SELECT rating FROM user_votes WHERE accountNumber = ? AND userId = ?',
+      [account, userId]
     );
-
-    if (logs.length === 0) {
+    if (!existing) {
       return res.status(404).json({ message: "Bạn chưa từng vote!" });
     }
-
-    const prevRating = logs[0].rating;
-
     // Giảm điểm
     await db.query(
-      `UPDATE ratings SET rating_${prevRating} = GREATEST(rating_${prevRating} - 1, 0) WHERE accountNumber = ?`,
+      `UPDATE ratings 
+         SET rating_${existing.rating} = GREATEST(rating_${existing.rating} - 1, 0)
+       WHERE accountNumber = ?`,
       [account]
     );
-
-    // Xoá log
+    // Xoá vote
     await db.query(
-      'DELETE FROM rating_logs WHERE accountNumber = ? AND (userId = ? OR ip = ?)',
-      [account, userId || null, ip]
+      'DELETE FROM user_votes WHERE accountNumber = ? AND userId = ?',
+      [account, userId]
     );
-
     res.json({ message: "Đã huỷ vote!" });
   } catch (err) {
     console.error("❌ Lỗi unvote:", err);
     res.status(500).json({ message: "Lỗi server!" });
   }
+};
+exports.getMyVote = async (req, res) => {
+  const userId = req.session.user && req.session.user.id;
+  const { account } = req.params;
+  if (!userId) return res.json({ rating: 0 });
+  const [[vote]] = await db.query(
+    'SELECT rating FROM user_votes WHERE accountNumber = ? AND userId = ?',
+    [account, userId]
+  );
+  res.json({ rating: vote ? vote.rating : 0 });
 };

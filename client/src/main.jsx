@@ -12,7 +12,11 @@ import CommentHistory from './pages/CommentHistory';
 import Report from './pages/Report';
 import Contact from './pages/Contact';
 import CheckWebsite from './pages/CheckWebsite';
-
+import PhishingTestSelect from "./pages/PhishingTestSelect";
+import PhishingGmailQuizFull from "./pages/PhishingTestDoing"; 
+import TermsOfService from "./pages/TermsPage"; 
+import AboutUs from "./pages/AboutUs"; 
+import VisionStrategy from "./pages/VisionStrategy"; 
 // Admin Pages
 import AdminLayout from './admin/AdminLayout';
 import Dashboard from './admin/Dashboard';
@@ -22,6 +26,12 @@ import ManageContacts from './admin/ManageContacts';
 import ManageReports from './admin/ManageReports';
 import AdminReportForm from './admin/AdminReportForm';
 import AdminGuard from './admin/AdminGuard';
+import ManageCategories from './admin/ManageCategories';
+import ManageTests from './admin/ManageTests';
+import ManageQuestions from "./admin/ManageQuestions";
+import AddQuestion from "./admin/AddQuestion";
+import ManageUserResults from "./admin/ManageAnswerSessions";
+import AnswerSessionDetail from './admin/AnswerSessionDetail'
 
 // Components
 import ChatbotModal from './components/ChatbotModal';
@@ -70,7 +80,11 @@ function AppWithChatbot() {
         <Route path="/report" element={<Report />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/check-website" element={<CheckWebsite />} />
-
+        <Route path="/phishing-test" element={<PhishingTestSelect />} />
+        <Route path="/phishing-test/doing" element={<PhishingGmailQuizFull />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/vision" element={<VisionStrategy />} />
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
           <Route path="dashboard" element={<Dashboard />} />
@@ -80,6 +94,12 @@ function AppWithChatbot() {
           <Route path="reports" element={<ManageReports />} />
           <Route path="reports/new" element={<AdminReportForm />} />
           <Route path="reports/:id" element={<AdminReportForm />} />
+          <Route path="categories" element={<ManageCategories />} />
+          <Route path="tests" element={<ManageTests />} />
+          <Route path="questions" element={<ManageQuestions />} />
+          <Route path="questions/new" element={<AddQuestion />} />
+          <Route path="user-results" element={<ManageUserResults />} />
+          <Route path="answer-sessions/detail" element={<AnswerSessionDetail />} />
         </Route>
       </Routes>
 

@@ -162,8 +162,9 @@ export default function Header() {
             <Link to="/"> <img src="/images/logoweb.png" alt="hm" /></Link>
           </div>
           <nav>
-            <Link to="/check-account">Tra cứu STK</Link>
-            <Link to="/check-website">Tra cứu Website</Link>
+            <Link to="/check-account">Tra cứu Thông Tin</Link>
+          
+             <Link to="/phishing-test">Kiểm tra lừa đảo</Link>
             <a className="nav-link" onClick={() => handleProtectedClick("/report")}>Gửi cảnh báo</a>
 
             {user.isLoggedIn ? (

@@ -9,6 +9,10 @@ export default function Sidebar({ collapsed, setCollapsed }) {
     { to: "/admin/reports", icon: "⚠️", label: "Quản lý Cảnh Báo" },
     { to: "/admin/comments", icon: "💬", label: "Quản lý Bình Luận" },
     { to: "/admin/contacts", icon: "📨", label: "Quản lý Liên Hệ" },
+    { to: "/admin/categories", icon: "|_|", label: "Quản Lý Loại Kiểm Tra" },
+    { to: "/admin/tests", icon: "|-|", label: "Quản Lý Bài Kiểm Tra" },
+    { to: "/admin/questions", icon: "|*|", label: "Quản Lý Câu Hỏi" },
+    { to: "/admin/user-results", icon: "|*|", label: "Quản Lý Trả Lời" },
   ];
 
   return (

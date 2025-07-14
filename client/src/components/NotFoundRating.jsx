@@ -1,8 +1,13 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./NotFoundRating.css";
-import React from 'react';
 
 export default function NotFoundRating({ account }) {
+  // Lấy thông tin user đăng nhập
+  const [userId, setUserId] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [loadingUser, setLoadingUser] = useState(true);
+
+  // Rating state
   const [selectedRating, setSelectedRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [labels, setLabels] = useState([]);
@@ -10,39 +15,78 @@ export default function NotFoundRating({ account }) {
 
   const colorMap = { 1: "red", 2: "orange", 3: "yellow", 4: "blue", 5: "green" };
 
-  // 🟡 Tách riêng hàm loadLocalVote
-  const loadLocalVote = (accountNumber) => {
-    const saved = localStorage.getItem(`rating_${accountNumber}`);
-    setSelectedRating(saved ? parseInt(saved) : 0);
-  };
+  // Lấy thông tin user đăng nhập giống như comment section
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/auth/me`, {
+          credentials: "include",
+        });
+        const result = await res.json();
+        if (result.success) {
+          setUserId(result.user.id);
+          setNickname(result.user.nickname || "");
+        } else {
+          setUserId("");
+          setNickname("");
+        }
+      } catch {
+        setUserId("");
+        setNickname("");
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+    fetchUser();
+  }, []);
 
-  // 🟢 Khi account thay đổi, fetch lại dữ liệu
+  // Lấy tổng rating
   useEffect(() => {
     const fetchLabels = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/ratings/${account}`);
+        const res = await fetch(`http://localhost:5000/api/rating/${account}`);
         const data = await res.json();
         if (typeof data === "object") {
           const labelData = Object.entries(data).map(([key, count]) => ({
             label: `${key} sao`,
-            count,
+            count: parseInt(count, 10), // sửa NaN warning
             color: colorMap[parseInt(key)] || "gray",
             star: parseInt(key)
           }));
           setLabels(labelData);
         } else {
-          console.error("API ratings không trả object:", data);
+          setLabels([]);
         }
       } catch (err) {
+        setLabels([]);
         console.error("API ratings error:", err);
       }
     };
-
     fetchLabels();
-    loadLocalVote(account); // 🟢 Gọi lại khi account đổi
-  }, [account]);
+  }, [account, selectedRating]);
 
-  // 🟢 Thống kê lượt tìm kiếm
+  // Lấy trạng thái đã vote của user hiện tại
+  useEffect(() => {
+    if (!userId) {
+      setSelectedRating(0);
+      return;
+    }
+    const fetchMyVote = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/rating/${account}/my-vote`, {
+          credentials: "include"
+        });
+        const data = await res.json();
+        if (data && data.rating) setSelectedRating(data.rating);
+        else setSelectedRating(0);
+      } catch (err) {
+        setSelectedRating(0);
+      }
+    };
+    fetchMyVote();
+  }, [account, userId]);
+
+  // Lấy thống kê lượt tìm kiếm
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -50,56 +94,42 @@ export default function NotFoundRating({ account }) {
         const data = await res.json();
         setSearchStats(data);
       } catch (err) {
-        console.error("Lỗi lấy search stats:", err);
+        setSearchStats({ today: 0, yesterday: 0, last7days: 0, last30days: 0 });
       }
     };
     fetchStats();
   }, [account]);
 
+  // Xử lý vote/unvote
   const handleVote = async (num) => {
-    let newLabels = [...labels];
-
+    if (loadingUser) return; // đợi user load xong
+    if (!userId) {
+      alert("Bạn cần đăng nhập để đánh giá!");
+      return;
+    }
     if (selectedRating === num) {
-      newLabels = newLabels.map((item) =>
-        item.star === num ? { ...item, count: Math.max(0, item.count - 1) } : item
-      );
-      setSelectedRating(0);
-      localStorage.removeItem(`rating_${account}`);
-      await fetch(`http://localhost:5000/api/ratings/${account}/unvote`, {
+      // Unvote
+      await fetch(`http://localhost:5000/api/rating/${account}/unvote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: num })
+        credentials: "include"
       });
+      setSelectedRating(0);
     } else {
-      newLabels = newLabels.map((item) => {
-        if (item.star === selectedRating) {
-          return { ...item, count: Math.max(0, item.count - 1) };
-        }
-        if (item.star === num) {
-          return { ...item, count: item.count + 1 };
-        }
-        return item;
+      // Vote hoặc chỉnh sửa vote
+      await fetch(`http://localhost:5000/api/rating/${account}/vote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ rating: num })
       });
       setSelectedRating(num);
-      localStorage.setItem(`rating_${account}`, num);
-
-      if (selectedRating !== 0) {
-        await fetch(`http://localhost:5000/api/ratings/${account}/unvote`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ rating: selectedRating })
-        });
-      }
-
-      await fetch(`http://localhost:5000/api/ratings/${account}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: num })
-      });
     }
-
-    setLabels(newLabels);
+    // labels sẽ tự reload ở useEffect trên (có selectedRating)
   };
+
+  // Tổng số vote để tính %
+  const total = labels.reduce((sum, l) => sum + l.count, 0);
 
   return (
     <div className="not-found-box">
@@ -115,11 +145,19 @@ export default function NotFoundRating({ account }) {
             onClick={() => handleVote(num)}
             onMouseEnter={() => setHoverRating(num)}
             onMouseLeave={() => setHoverRating(0)}
+            style={{
+              cursor: userId ? "pointer" : "not-allowed",
+              opacity: userId ? 1 : 0.5
+            }}
           />
         ))}
       </div>
 
-      <p>{selectedRating}/5 – (Bạn đã đánh giá)</p>
+      <p>
+        {selectedRating
+          ? `${selectedRating}/5 – (Bạn đã đánh giá)`
+          : "Bạn chưa đánh giá"}
+      </p>
 
       <div className="search-stats">
         <div><strong>Hôm nay:</strong> {searchStats.today} lượt tìm kiếm</div>
@@ -133,13 +171,16 @@ export default function NotFoundRating({ account }) {
           <p>Đang tải dữ liệu đánh giá...</p>
         ) : (
           labels.map((item, index) => {
-            const total = labels.reduce((sum, l) => sum + l.count, 0);
             const percent = total === 0 ? 0 : (item.count / total) * 100;
             return (
               <div className="bar" key={index}>
                 <span
                   className={`label ${item.color} clickable`}
                   onClick={() => handleVote(item.star)}
+                  style={{
+                    cursor: userId ? "pointer" : "not-allowed",
+                    opacity: userId ? 1 : 0.5
+                  }}
                 >
                   {item.label} [{item.count}]
                 </span>

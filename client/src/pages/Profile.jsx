@@ -168,185 +168,202 @@ export default function Profile() {
       <div className="profile-page">
         <SidebarProfile active="profile" />
 
-        <main className="profile-info">
-          <h2>Thông tin tài khoản</h2>
-          <div className="profile-content">
-            <div className="info-section">
-              <div>
-                <span>Tên người dùng:</span>{" "}
-                {editMode ? (
-                  <input
-                    type="text"
-                    value={formEdit.username}
-                    onChange={(e) =>
-                      setFormEdit({ ...formEdit, username: e.target.value })
-                    }
-                  />
-                ) : (
-                  userData.username
-                )}
-              </div>
-              <div>
-                <span>Họ và tên:</span>{" "}
-                {editMode ? (
-                  <input
-                    type="text"
-                    value={formEdit.name}
-                    onChange={(e) =>
-                      setFormEdit({ ...formEdit, name: e.target.value })
-                    }
-                  />
-                ) : (
-                  userData.name
-                )}
-              </div>
-              <div>
-                <span>Email:</span> {userData.email}
-              </div>
-              <div>
-                <span>Ngày tạo tài khoản:</span>{" "}
-                {userData.createdAt
-                  ? new Date(userData.createdAt).toLocaleDateString("vi-VN")
-                  : "Chưa có"}
-              </div>
+          <div className="profile-glass-root">
+      <div className="profile-glass-card">
+        <div className="profile-glass-title">Hồ sơ cá nhân</div>
 
-              <div>
-                <span>Biệt danh (nickname):</span>{" "}
-                {!nicknameMode ? (
-                  <>
-                    <span style={{ color: userData.nickname ? "black" : "gray" }}>
-                      {userData.nickname || <i>Chưa đặt</i>}
-                    </span>
-                    <button
-                      className="edit-btn"
-                      style={{ marginLeft: 8 }}
-                      onClick={() => setNicknameMode(true)}
-                    >
-                      {userData.nickname ? "Đổi biệt danh" : "Đặt biệt danh"}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <input
-                      style={{ marginLeft: 8 }}
-                      value={formNickname}
-                      onChange={(e) => setFormNickname(e.target.value)}
-                      maxLength={100}
-                      placeholder="Nhập biệt danh mới..."
-                      autoFocus
-                    />
-                    <button
-                      className="save-btn"
-                      style={{ marginLeft: 8 }}
-                      onClick={handleUpdateNickname}
-                    >
-                      Lưu
-                    </button>
-                    <button
-                      className="cancel-btn"
-                      style={{ marginLeft: 8 }}
-                      onClick={() => {
-                        setNicknameMode(false);
-                        setFormNickname(userData.nickname || "");
-                      }}
-                    >
-                      Huỷ
-                    </button>
-                  </>
-                )}
-              </div>
-
-              <div className="password-line">
-                <span>Mật khẩu:</span> ********
-                {!showPasswordForm && (
-                  <button
-                    className="edit-btn"
-                    onClick={() => setShowPasswordForm(true)}
-                  >
-                    Đổi mật khẩu
-                  </button>
-                )}
-              </div>
-
-              {showPasswordForm && (
-                <div className="change-password">
-                  <form onSubmit={handleChangePassword}>
-                    <div>
-                      <label>Mật khẩu cũ:</label>
-                      <input
-                        type="password"
-                        value={formPassword.oldPassword}
-                        onChange={(e) =>
-                          setFormPassword({
-                            ...formPassword,
-                            oldPassword: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label>Mật khẩu mới:</label>
-                      <input
-                        type="password"
-                        value={formPassword.newPassword}
-                        onChange={(e) =>
-                          setFormPassword({
-                            ...formPassword,
-                            newPassword: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label>Xác nhận lại:</label>
-                      <input
-                        type="password"
-                        value={formPassword.confirmNew}
-                        onChange={(e) =>
-                          setFormPassword({
-                            ...formPassword,
-                            confirmNew: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="btn-group">
-                      <button type="submit">Cập nhật mật khẩu</button>
-                      <button
-                        type="button"
-                        className="cancel-btn"
-                        onClick={() => setShowPasswordForm(false)}
-                      >
-                        Huỷ
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
-
-              {!editMode ? (
-                <button
-                  className="main-edit-btn"
-                  onClick={() => setEditMode(true)}
-                >
-                  Chỉnh sửa thông tin
-                </button>
-              ) : (
-                <div className="btn-group">
-                  <button className="save-btn" onClick={handleChangeInfo}>
-                    💾 Lưu
-                  </button>
-                  <button
-                    className="cancel-btn"
-                    onClick={() => setEditMode(false)}
-                  >
-                    Huỷ
-                  </button>
-                </div>
-              )}
-            </div>
+        <div className="profile-glass-avatar-box">
+          <img
+            src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userData.nickname || userData.username)}`}
+            alt="avatar"
+            className="profile-glass-avatar-img"
+          />
+          <div className="profile-glass-nickname">
+            {userData.nickname || userData.username}
           </div>
-        </main>
+        </div>
+
+        <div className="profile-glass-fields">
+          <div className="profile-glass-row">
+            <span className="profile-glass-label">Tên đăng nhập:</span>
+            {editMode ? (
+              <input
+                type="text"
+                className="profile-glass-input"
+                value={formEdit.username}
+                onChange={e =>
+                  setFormEdit({ ...formEdit, username: e.target.value })
+                }
+              />
+            ) : (
+              <span className="profile-glass-value">{userData.username}</span>
+            )}
+          </div>
+          <div className="profile-glass-row">
+            <span className="profile-glass-label">Họ và tên:</span>
+            {editMode ? (
+              <input
+                type="text"
+                className="profile-glass-input"
+                value={formEdit.name}
+                onChange={e =>
+                  setFormEdit({ ...formEdit, name: e.target.value })
+                }
+              />
+            ) : (
+              <span className="profile-glass-value">{userData.name}</span>
+            )}
+          </div>
+          <div className="profile-glass-row">
+            <span className="profile-glass-label">Email:</span>
+            <span className="profile-glass-value">{userData.email}</span>
+          </div>
+          <div className="profile-glass-row">
+            <span className="profile-glass-label">Ngày tạo:</span>
+            <span className="profile-glass-value">
+              {userData.createdAt
+                ? new Date(userData.createdAt).toLocaleDateString("vi-VN")
+                : "Chưa có"}
+            </span>
+          </div>
+
+          <div className="profile-glass-row">
+            <span className="profile-glass-label">Biệt danh:</span>
+            {!nicknameMode ? (
+              <>
+                <span
+                  className="profile-glass-value"
+                  style={{ color: userData.nickname ? "#197d4e" : "#a3a3a3" }}
+                >
+                  {userData.nickname || <i>Chưa đặt</i>}
+                </span>
+                <button
+                  className="profile-glass-btn profile-glass-btn-outline"
+                  style={{ marginLeft: 8, fontSize: "0.96rem" }}
+                  onClick={() => setNicknameMode(true)}
+                >
+                  {userData.nickname ? "Đổi" : "Đặt"}
+                </button>
+              </>
+            ) : (
+              <>
+                <input
+                  className="profile-glass-input"
+                  value={formNickname}
+                  onChange={e => setFormNickname(e.target.value)}
+                  maxLength={100}
+                  placeholder="Nhập biệt danh mới..."
+                  autoFocus
+                />
+                <button className="profile-glass-btn" onClick={handleUpdateNickname}>
+                  Lưu
+                </button>
+                <button
+                  className="profile-glass-btn profile-glass-btn-outline"
+                  onClick={() => {
+                    setNicknameMode(false);
+                    setFormNickname(userData.nickname || "");
+                  }}
+                >
+                  Huỷ
+                </button>
+              </>
+            )}
+          </div>
+
+          <div className="profile-glass-row">
+            <span className="profile-glass-label">Mật khẩu:</span>
+            <span className="profile-glass-value">********</span>
+            {!showPasswordForm && (
+              <button
+                className="profile-glass-btn profile-glass-btn-outline"
+                onClick={() => setShowPasswordForm(true)}
+              >
+                Đổi mật khẩu
+              </button>
+            )}
+          </div>
+        </div>
+
+        {showPasswordForm && (
+          <div className="profile-glass-pw-form">
+            <form onSubmit={handleChangePassword}>
+              <label>Mật khẩu cũ:</label>
+              <input
+                type="password"
+                className="profile-glass-input"
+                value={formPassword.oldPassword}
+                onChange={e =>
+                  setFormPassword({
+                    ...formPassword,
+                    oldPassword: e.target.value,
+                  })
+                }
+              />
+              <label>Mật khẩu mới:</label>
+              <input
+                type="password"
+                className="profile-glass-input"
+                value={formPassword.newPassword}
+                onChange={e =>
+                  setFormPassword({
+                    ...formPassword,
+                    newPassword: e.target.value,
+                  })
+                }
+              />
+              <label>Xác nhận lại:</label>
+              <input
+                type="password"
+                className="profile-glass-input"
+                value={formPassword.confirmNew}
+                onChange={e =>
+                  setFormPassword({
+                    ...formPassword,
+                    confirmNew: e.target.value,
+                  })
+                }
+              />
+              <div className="profile-glass-btn-group">
+                <button type="submit" className="profile-glass-btn">
+                  Cập nhật
+                </button>
+                <button
+                  type="button"
+                  className="profile-glass-btn profile-glass-btn-outline"
+                  onClick={() => setShowPasswordForm(false)}
+                >
+                  Huỷ
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        <div className="profile-glass-btn-group">
+          {!editMode ? (
+            <button
+              className="profile-glass-btn"
+              onClick={() => setEditMode(true)}
+            >
+              Chỉnh sửa thông tin
+            </button>
+          ) : (
+            <>
+              <button className="profile-glass-btn" onClick={handleChangeInfo}>
+                Lưu thay đổi
+              </button>
+              <button
+                className="profile-glass-btn profile-glass-btn-outline"
+                onClick={() => setEditMode(false)}
+              >
+                Huỷ
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
       </div>
       <Footer />
     </>

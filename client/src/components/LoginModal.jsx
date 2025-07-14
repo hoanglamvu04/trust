@@ -2,6 +2,7 @@ import { useState } from "react";
 import React from 'react';
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "./LoginModal.css";
 
 export default function LoginModal({
   isRegister,

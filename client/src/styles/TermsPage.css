@@ -1,0 +1,128 @@
+.terms-root {
+  background: #f6faf8;
+  min-height: 100vh;
+}
+
+.terms-container {
+  max-width: 1500px;
+  width: 90%;
+  margin: 0 auto;
+  margin: 32px auto 36px auto;
+  padding: 36px 34px 28px 34px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 32px rgba(20, 96, 45, 0.09);
+  font-size: 1.08rem;
+  line-height: 1.7;
+  color: #213547;
+}
+
+.terms-title {
+  color: #22c55e;
+  text-align: center;
+  font-size: 2.1rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.terms-subtitle {
+  text-align: center;
+  font-size: 1.02rem;
+  color: #657b66;
+  margin-bottom: 24px;
+  font-style: italic;
+}
+
+.terms-section {
+  border-radius: 9px;
+  margin-bottom: 18px;
+  background: #f8fbf7;
+  box-shadow: 0 2px 12px 0 rgba(52,199,89,0.03);
+  transition: background 0.18s;
+  overflow: hidden;
+  border: 1px solid #e3f7ec;
+}
+
+.terms-section.open {
+  background: #f5fff9;
+  border-color: #b4ebcf;
+}
+
+.section-header {
+  font-size: 1.13rem;
+  font-weight: 600;
+  color: #1a7f42;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 15px 18px 11px 14px;
+  background: transparent;
+  border-bottom: 1px dashed #bee5c8;
+  transition: background 0.13s;
+}
+.section-header:hover,
+.section-header:focus {
+  background: #e8faec;
+  outline: none;
+}
+
+.arrow {
+  font-size: 1.23em;
+  margin-right: 3px;
+  color: #199958;
+}
+
+.section-content {
+  padding: 7px 22px 16px 32px;
+  font-size: 1.01em;
+  animation: fadeinSection 0.23s;
+}
+@keyframes fadeinSection {
+  from { opacity: 0; transform: translateY(-8px);}
+  to { opacity: 1; transform: none;}
+}
+
+.terms-section ul {
+  margin: 4px 0 7px 16px;
+  padding-left: 18px;
+  list-style: disc;
+}
+
+.terms-section ul ul {
+  margin-top: 2px;
+  margin-bottom: 2px;
+  margin-left: 15px;
+  padding-left: 18px;
+  list-style: circle;
+}
+
+.terms-section b {
+  display: block;
+  margin-top: 6px;
+  margin-bottom: 2px;
+  color: #178346;
+  font-weight: 600;
+}
+
+.terms-footer-note {
+  margin-top: 40px;
+  text-align: center;
+  color: #5d7458;
+  font-size: 1rem;
+  border-top: 1px dashed #c5ecd4;
+  padding-top: 22px;
+  line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+  .terms-container {
+    padding: 12px 2vw;
+    font-size: 0.98rem;
+  }
+  .terms-title { font-size: 1.26rem; }
+  .section-header { font-size: 1.01rem;}
+  .section-content { font-size: 0.97rem;}
+}

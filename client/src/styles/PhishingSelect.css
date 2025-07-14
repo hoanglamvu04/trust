@@ -1,0 +1,145 @@
+.test-select-container {
+  max-width: 920px;
+  margin: 42px auto 20px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 2px 28px #2e5b991a;
+  padding: 36px 30px 30px 30px;
+}
+.ts-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #205a9b;
+  margin-bottom: 38px;
+  letter-spacing: -0.5px;
+  text-align: center;
+}
+.ts-section { margin-bottom: 38px; }
+.ts-section-title {
+  font-weight: 600;
+  color: #194a86;
+  font-size: 1.18rem;
+  margin-bottom: 14px;
+}
+.ts-hot-list {
+  display: flex; gap: 22px; flex-wrap: wrap; margin-bottom: 20px;
+}
+.ts-hot-item {
+  background: #ffecec;
+  border-radius: 12px;
+  padding: 20px 26px;
+  min-width: 210px;
+  flex: 1 1 200px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, background 0.18s;
+  border: 1.5px solid #ffd7d7;
+  margin-bottom: 10px;
+}
+.ts-hot-item:hover { box-shadow: 0 4px 16px #ffaaaa44; background: #fff4f4; }
+.ts-hot-name { font-size: 1.13em; font-weight: 700; color: #e33c3c; }
+.ts-hot-meta {
+  font-size: 0.98em;
+  color: #b55555;
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+.ts-hot-attempts { font-weight: 600; }
+.ts-hot-cat { font-style: italic; }
+
+.ts-cat-list {
+  display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 12px;
+}
+.ts-cat-list button {
+  background: #f1f5fa;
+  color: #2861a0;
+  border: none;
+  border-radius: 7px;
+  padding: 8px 20px;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.13s, color 0.13s;
+}
+.ts-cat-list .ts-cat-active, .ts-cat-list button:active {
+  background: #245d9d;
+  color: #fff;
+}
+
+.ts-test-list { display: flex; flex-wrap: wrap; gap: 28px; }
+.ts-test-item {
+  background: #f6f8fd;
+  border-radius: 13px;
+  box-shadow: 0 2px 8px #4f70c21a;
+  padding: 18px 24px;
+  flex: 1 1 290px;
+  min-width: 260px;
+  max-width: 350px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1.2px solid #dde5f2;
+}
+.ts-test-name {
+  font-weight: 600;
+  color: #20498c;
+  font-size: 1.11rem;
+  margin-bottom: 8px;
+}
+.ts-test-desc {
+  font-size: 0.99em;
+  color: #888;
+  margin-bottom: 10px;
+}
+.ts-test-meta {
+  color: #35529e;
+  font-size: 0.96em;
+  margin-bottom: 10px;
+}
+.ts-btn-do {
+  background: #20754a;
+  color: #fff;
+  border-radius: 7px;
+  border: none;
+  font-size: 1em;
+  font-weight: 700;
+  padding: 8px 22px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.ts-btn-do:hover { background: #154d2e; }
+.ts-test-empty, .ts-loading {
+  color: #a43b3b;
+  font-size: 1.05em;
+  padding: 18px 0 2px 2px;
+}
+.test-select-container { max-width: 820px; margin: 32px auto 0; background: #fff; border-radius: 18px; box-shadow: 0 2px 16px #e9ecf1; padding: 32px 24px 36px 24px; }
+.ts-title { font-size: 2rem; font-weight: bold; color: #2467ad; text-align: center; margin-bottom: 24px; }
+.ts-section { margin-top: 24px; }
+.ts-section-title { font-size: 1.15rem; font-weight: 600; color: #224182; margin-bottom: 14px; }
+.ts-hot-list, .ts-test-list { display: flex; flex-wrap: wrap; gap: 22px; }
+.ts-hot-item, .ts-test-item {
+  background: #f8fafd; border-radius: 13px; padding: 18px 20px; cursor: pointer; min-width: 180px; flex: 1 0 210px; box-shadow: 0 1px 8px #ececec;
+  transition: box-shadow 0.15s, background 0.18s;
+}
+.ts-hot-item:hover, .ts-test-item:hover { background: #e7f1ff; box-shadow: 0 3px 14px #d3dff4; }
+.ts-hot-name, .ts-test-name { font-weight: bold; font-size: 1.07rem; margin-bottom: 8px; }
+.ts-hot-meta, .ts-test-meta { font-size: 0.95rem; color: #697db2; display: flex; gap: 14px; }
+.ts-test-desc { font-size: 0.98rem; color: #355; margin: 4px 0 8px 0; }
+.ts-cat-list { margin-top: 8px; margin-bottom: 12px; }
+.ts-cat-list button { margin-right: 10px; padding: 6px 20px; border-radius: 9px; border: none; background: #e7ecf5; color: #174984; cursor: pointer; }
+.ts-cat-active { background: #216bdf; color: #fff !important; }
+.ts-btn-do { margin-top: 10px; background: #27843a; color: #fff; border: none; border-radius: 7px; padding: 7px 28px; font-weight: 600; cursor: pointer; }
+.ts-btn-do:hover { background: #17662d; }
+.ts-test-empty, .ts-empty { color: #c35; font-weight: 500; margin: 14px 0; }
+.ts-loading { color: #888; text-align: center; margin: 18px 0; }
+
+/* Modal overlay */
+.ts-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(30,45,60,0.21); z-index: 1500; display: flex; align-items: center; justify-content: center; }
+.ts-modal { background: #fff; border-radius: 14px; padding: 34px 30px 22px; max-width: 95vw; width: 370px; box-shadow: 0 6px 28px #bfd1ed; text-align: center; }
+.ts-modal-ok { background: #2675da; color: #fff; border: none; border-radius: 7px; padding: 7px 24px; font-weight: bold; margin-right: 5px; }
+.ts-modal-ok:hover { background: #174984; }
+.ts-modal-cancel { background: #eee; color: #243; border: none; border-radius: 7px; padding: 7px 24px; font-weight: 500; }
+.ts-modal-cancel:hover { background: #ddd; }

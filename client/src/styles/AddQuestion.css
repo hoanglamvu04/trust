@@ -1,0 +1,85 @@
+/* Thêm vào AdminStyles.css hoặc file riêng đều được */
+
+.big-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 18px #1a1a1a0c;
+  padding: 30px 40px 26px 40px;
+  margin-top: 18px;
+}
+
+.big-form input,
+.big-form select,
+.big-form textarea {
+  font-size: 1.07em;
+  border: 1.3px solid #d2e1ef;
+  border-radius: 8px;
+  padding: 8px 14px;
+  outline: none;
+  background: #f7fafc;
+  transition: border 0.18s;
+  margin-bottom: 3px;
+}
+
+.big-form input:focus,
+.big-form select:focus,
+.big-form textarea:focus {
+  border-color: #408fe7;
+  background: #eef6fe;
+}
+
+.big-form textarea {
+  min-height: 75px;
+  max-width: 100%;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.big-form label {
+  font-size: 1em;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.big-form .modal-actions,
+.big-form .form-actions {
+  display: flex;
+  gap: 18px;
+  margin-top: 10px;
+}
+
+.big-form button,
+.big-form .btn-cancel {
+  font-size: 1.08em;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  padding: 10px 26px;
+  cursor: pointer;
+  transition: background 0.16s;
+  margin-bottom: 4px;
+}
+
+.big-form button {
+  background: #198754;
+  color: #fff;
+}
+
+.big-form button:hover {
+  background: #11663f;
+}
+
+.big-form .btn-cancel {
+  background: #eee;
+  color: #2c3e50;
+  border: 1px solid #ddd;
+}
+
+.big-form .btn-cancel:hover {
+  background: #f8f9fa;
+  color: #ff2323;
+  border: 1px solid #bbb;
+}
