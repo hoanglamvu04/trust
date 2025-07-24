@@ -1,0 +1,118 @@
+.index-home-container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 0 32px 0;
+  background: #f7fafc;
+  min-height: 100vh;
+}
+
+.index-home-title img {
+  width: 330px;
+  margin: 0 auto 18px auto;
+  display: block;
+}
+
+.index-home-desc {
+  text-align: center;
+  font-size: 1.15rem;
+  color: #14533c;
+  margin-bottom: 18px;
+  font-weight: 500;
+}
+
+.index-section-title {
+  font-size: 1.22rem;
+  font-weight: bold;
+  color: #2873d6;
+  margin-bottom: 10px;
+  background: linear-gradient(90deg, #e5f1ff 55%, transparent 100%);
+  padding: 9px 22px 9px 17px;
+  border-radius: 16px 30px 30px 16px;
+  display: inline-block;
+  letter-spacing: 0.01em;
+  box-shadow: 0 1px 8px 0 #e5f3ff57;
+}
+
+.index-report-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.index-report-card, .index-comment-card {
+  flex: 1 1 260px;
+  background: #fff;
+  border-radius: 17px;
+  box-shadow: 0 2px 18px 0 #bbd1c70c;
+  border: 1.5px solid #d2eae0;
+  padding: 20px 24px 16px 24px;
+  margin-bottom: 6px;
+  min-width: 260px;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: box-shadow 0.22s, transform 0.17s;
+  position: relative;
+  outline: none;
+}
+
+.index-report-card:hover, .index-comment-card:hover,
+.index-report-card:focus, .index-comment-card:focus {
+  box-shadow: 0 6px 24px 0 #5ad6a83a;
+  transform: translateY(-4px) scale(1.01);
+  border-color: #3cd17e;
+  z-index: 2;
+}
+
+.index-report-name {
+  font-weight: bold;
+  font-size: 1.07rem;
+  color: #035c3f;
+  margin-bottom: 8px;
+  letter-spacing: 0.01em;
+  max-width: 92%;
+  word-break: break-word;
+}
+.index-report-account {
+  font-weight: bold;
+  font-size: 1.07rem;
+  color: #126b4b;
+  margin-bottom: 7px;
+}
+
+.index-report-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 14px;
+  color: #5a6872;
+  font-size: 0.97rem;
+  margin-top: 10px;
+  min-height: 26px;
+}
+
+.index-comment-user {
+  font-weight: bold;
+  color: #2873d6;
+  margin-bottom: 7px;
+  font-size: 1.03rem;
+}
+.index-comment-content {
+  color: #25544e;
+  margin-bottom: 7px;
+  font-size: 0.98rem;
+}
+.index-comment-meta {
+  font-size: 0.93rem;
+  color: #888;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .index-report-list { flex-direction: column; gap: 10px;}
+  .index-report-card, .index-comment-card { min-width: 95vw; }
+}

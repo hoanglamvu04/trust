@@ -133,5 +133,49 @@ exports.logout = (req, res) => {
     res.json({ success: true, message: 'Đăng xuất thành công!' });
   });
 };
+// Đổi mật khẩu cho người dùng hiện tại (cần đăng nhập/verifyToken)
+exports.changePassword = async (req, res) => {
+  const userId = req.user.id; // lấy từ verifyToken middleware
+  const { oldPassword, newPassword } = req.body;
 
-// (Bạn có thể bổ sung thêm API updateNickname nếu muốn cho phép đổi biệt danh)
+  // Kiểm tra đủ trường
+  if (!oldPassword || !newPassword)
+    return res.status(400).json({ success: false, message: 'Vui lòng nhập đầy đủ thông tin!' });
+
+  // Kiểm tra mật khẩu mới đủ mạnh
+  const strongPasswordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,}$/;
+  if (!strongPasswordRegex.test(newPassword)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Mật khẩu mới phải ít nhất 6 ký tự, có chữ hoa, số, ký tự đặc biệt!'
+    });
+  }
+
+  try {
+    // Lấy user
+    const [[user]] = await db.query('SELECT id, password FROM users WHERE id = ?', [userId]);
+    if (!user) return res.status(404).json({ success: false, message: 'Không tìm thấy user!' });
+
+    // Kiểm tra oldPassword đúng không
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch)
+      return res.status(400).json({ success: false, message: 'Mật khẩu cũ không đúng!' });
+
+    // Không cho đặt trùng mật khẩu cũ
+    const isNewMatch = await bcrypt.compare(newPassword, user.password);
+    if (isNewMatch)
+      return res.status(400).json({ success: false, message: 'Mật khẩu mới không được trùng mật khẩu cũ!' });
+
+    // Cập nhật mật khẩu mới + tăng tokenVersion
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await db.query(
+      'UPDATE users SET password = ?, tokenVersion = tokenVersion + 1 WHERE id = ?',
+      [hashed, userId]
+    );
+
+    res.json({ success: true, message: 'Đổi mật khẩu thành công. Vui lòng đăng nhập lại!' });
+  } catch (err) {
+    console.error('❌ changePassword error:', err);
+    res.status(500).json({ success: false, message: 'Lỗi server!' });
+  }
+};

@@ -9,7 +9,7 @@ exports.getQuestions = async (req, res) => {
     const [rows] = await db.query(
       `SELECT 
         q.id, q.subject, q.sender, q.email, q.time, q.avatar, q.preview,
-        q.content, q.is_scam, q.explanation
+        q.content, q.is_scam, q.scam_reason
       FROM questions q
       WHERE q.test_id = ?
       ORDER BY q.id ASC

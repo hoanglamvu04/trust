@@ -23,7 +23,6 @@ export default function SidebarProfile({ active }) {
         >
           💬 Lịch sử bình luận
         </li>
-        <li className="sidebar-profile-logout">↩️ Đăng xuất</li>
       </ul>
     </aside>
   );

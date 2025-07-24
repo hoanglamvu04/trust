@@ -46,7 +46,7 @@ export default function PhishingGmailQuizFull() {
           preview: q.preview,
           content: q.content,
           isScam: !!q.is_scam,
-          scamReason: q.explanation,
+          scamReason: q.scam_reason,
           unread: !!q.unread,
           starred: !!q.starred,
         }));
@@ -75,9 +75,9 @@ export default function PhishingGmailQuizFull() {
   };
 
   const answerMail = (id, isScam) => {
-    if (userAnswers[id] !== undefined) return;
-    setUserAnswers(a => ({ ...a, [id]: isScam }));
-  };
+  setUserAnswers(a => ({ ...a, [id]: isScam }));
+};
+
 
   // 4. Gửi kết quả lên server: Chỉ tạo session khi ấn nộp bài!
   const submitToServer = async () => {
@@ -95,10 +95,10 @@ export default function PhishingGmailQuizFull() {
       if (!data.session_id) throw new Error("Không tạo được phiên làm bài!");
       session_id = data.session_id;
 
-      // 2. Gửi kết quả từng câu
+      // 2. Gửi kết quả từng câu (ĐÃ ĐỔI route)
       for (const q of list) {
         const is_correct = userAnswers[q.id] === q.isScam ? 1 : 0;
-        await fetch("/api/user-results/submit", {
+        await fetch("/api/test-sessions/answer", {  // <--- Sửa tại đây
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -113,12 +113,14 @@ export default function PhishingGmailQuizFull() {
       }
 
       // 3. Gọi API nộp bài (update submitted_at, score)
-      await fetch("/api/test-sessions/submit", {
+      const submitRes = await fetch("/api/test-sessions/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ session_id }),
       });
+      if (!submitRes.ok) throw new Error("Nộp bài thất bại!");
+
       await fetch("/api/test-sessions/finish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -126,26 +128,34 @@ export default function PhishingGmailQuizFull() {
         body: JSON.stringify({ session_id }),
       });
 
-
+      setSaving(false);
+      return true;
     } catch (e) {
       alert("Lưu kết quả thất bại!");
+      setSaving(false);
+      return false;
     }
-    setSaving(false);
   };
 
 
   const handleSubmit = async () => {
     if (!allAnswered) setShowConfirm(true);
     else {
-      await submitToServer();
-      setSubmitted(true);
-      setShowConfirm(false);
+      const ok = await submitToServer();
+      if (ok) {
+        setSubmitted(true);
+        setShowConfirm(false);
+      }
+      // Nếu không ok, KHÔNG setSubmitted, không chuyển giao diện!
     }
   };
   const confirmSubmitAnyway = async () => {
-    await submitToServer();
-    setSubmitted(true);
-    setShowConfirm(false);
+    const ok = await submitToServer();
+    if (ok) {
+      setSubmitted(true);
+      setShowConfirm(false);
+    }
+    // Nếu không ok, KHÔNG setSubmitted, không chuyển giao diện!
   };
   const totalCorrect = list.filter(e => userAnswers[e.id] === e.isScam).length;
 
@@ -263,14 +273,12 @@ export default function PhishingGmailQuizFull() {
                     <button
                       className="gmail-btn safe"
                       onClick={() => answerMail(selected.id, false)}
-                      disabled={userAnswers[selected.id] !== undefined}
                     >
                       Đây là thư hợp lệ
                     </button>
                     <button
                       className="gmail-btn danger"
                       onClick={() => answerMail(selected.id, true)}
-                      disabled={userAnswers[selected.id] !== undefined}
                     >
                       Thư lừa đảo!
                     </button>
@@ -292,17 +300,40 @@ export default function PhishingGmailQuizFull() {
         </div>
         <div style={{ textAlign: "center", margin: "20px 0" }}>
           <button
-            disabled={page === 1 || submitted}
+            className="btn-nav"
+            disabled={page === 1}
             onClick={() => { setPage(page - 1); setSelected(null); }}
-            style={{ marginRight: 10 }}
-          >Trước</button>
+            style={{
+              marginRight: 10,
+              opacity: page === 1 ? 0.4 : 1,
+              background: "#eef4ff",
+              border: "1px solid #7baaf7",
+              color: "#2456a3",
+              fontWeight: 600,
+              padding: "8px 22px",
+              borderRadius: 8,
+              cursor: page === 1 ? "not-allowed" : "pointer"
+            }}
+          >← Trước</button>
           Trang {page}/{Math.ceil(list.length / perPage)}
           <button
-            disabled={endIdx >= list.length || submitted}
+            className="btn-nav"
+            disabled={endIdx >= list.length}
             onClick={() => { setPage(page + 1); setSelected(null); }}
-            style={{ marginLeft: 10 }}
-          >Sau</button>
+            style={{
+              marginLeft: 10,
+              opacity: endIdx >= list.length ? 0.4 : 1,
+              background: "#eef4ff",
+              border: "1px solid #7baaf7",
+              color: "#2456a3",
+              fontWeight: 600,
+              padding: "8px 22px",
+              borderRadius: 8,
+              cursor: endIdx >= list.length ? "not-allowed" : "pointer"
+            }}
+          >Sau →</button>
         </div>
+
         {!submitted && (
           <div style={{ textAlign: "center", marginBottom: 24 }}>
             <button
@@ -342,30 +373,6 @@ export default function PhishingGmailQuizFull() {
             >
               ← Quay lại chọn đề
             </button>
-            {/* Đề xuất HOT khác */}
-            {suggestedTests.length > 0 && (
-              <div style={{ marginTop: 24 }}>
-                <div style={{ fontWeight: 600, marginBottom: 8, fontSize: 16 }}>
-                  Đề xuất kiểm tra tiếp theo:
-                </div>
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
-                  {suggestedTests.map(t => (
-                    <div
-                      key={t.id}
-                      style={{
-                        background: "#f5f7fd", borderRadius: 8, padding: "14px 22px",
-                        minWidth: 180, boxShadow: "0 0 8px #0001", cursor: "pointer"
-                      }}
-                      onClick={() => navigate(`/phishing-test/doing?test_id=${t.id}`)}
-                    >
-                      <div style={{ fontWeight: 600 }}>{t.name}</div>
-                      <div style={{ fontSize: 13, color: "#444" }}>{t.category_name || ""}</div>
-                      <div style={{ fontSize: 13, color: "#999" }}>{t.session_count || t.attempts || 0} lượt làm</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>

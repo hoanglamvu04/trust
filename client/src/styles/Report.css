@@ -138,3 +138,21 @@ textarea {
     flex-direction: column;
   }
 }
+
+.form-check {
+  margin-top: 16px;
+  font-size: 0.95rem;
+  color: #222;
+}
+
+.form-check input[type="checkbox"] {
+  transform: scale(1.2);
+  margin-right: 6px;
+  cursor: pointer;
+}
+
+.form-error {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 4px;
+}

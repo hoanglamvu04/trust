@@ -292,51 +292,37 @@ export default function CommentSection({ reportId }) {
           )}
 
           {Array.isArray(c.replies) && c.replies.length > 0 && (
-            <div className="reply-list">
-              <p>
-                <strong>Phản hồi:</strong>
-              </p>
+            <div className="reply-list-modern">
               {c.replies
                 .slice(0, expandedReplies[c.id] || 3)
                 .map((r, idx) => (
-                  <div
-                    key={idx}
-                    className="reply-item"
-                    style={{
-                      padding: "8px",
-                      background: "#f4f4f4",
-                      margin: "4px 0",
-                      borderRadius: "5px",
-                    }}
-                  >
-                    <div
-                      style={{ display: "flex", alignItems: "center", gap: 8 }}
-                    >
+                  <div className="reply-card" key={idx}>
+                    <div className="reply-header">
                       <img
                         src={getAvatarUrl(r.userName)}
-                        className="comment-avatar"
+                        className="reply-avatar"
                         alt="avatar"
                       />
-                      <strong>{r.userName}</strong>: {r.content}
-                    </div>
-                    <div className="reply-time">
-                      <FaClock style={{ marginRight: "5px" }} />
-                      {dayjs(r.createdAt).fromNow()}
+                      <span className="reply-username">{r.userName}</span>
+                      <span className="reply-time-modern">
+                        <FaClock size={13} style={{ marginRight: 2, marginLeft: 8 }} />
+                        {dayjs(r.createdAt).fromNow()}
+                      </span>
                       {String(userId) === String(r.userId) && (
                         <button
-                          className="comment-btn delete"
-                          style={{ marginLeft: 10 }}
+                          className="reply-btn-delete"
                           onClick={() => handleDeleteReply(c.id, idx)}
                         >
                           Xoá
                         </button>
                       )}
                     </div>
+                    <div className="reply-content">{r.content}</div>
                   </div>
                 ))}
               {c.replies.length > 3 && (
                 <button
-                  className="comment-btn see-more"
+                  className="reply-btn-more"
                   onClick={() =>
                     setExpandedReplies((prev) => ({
                       ...prev,
@@ -344,13 +330,12 @@ export default function CommentSection({ reportId }) {
                     }))
                   }
                 >
-                  {expandedReplies[c.id]
-                    ? "Thu gọn phản hồi"
-                    : "Xem thêm phản hồi"}
+                  {expandedReplies[c.id] ? "Thu gọn" : "Xem thêm phản hồi"}
                 </button>
               )}
             </div>
           )}
+
         </div>
       ))}
 

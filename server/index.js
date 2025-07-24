@@ -41,6 +41,9 @@ app.use(session({
 
 // ✅ Phục vụ ảnh chứng cứ từ thư mục uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const reportDetail = require('./routes/reportDetail');
+const statisticsRoutes = require('./routes/statistics');
+app.use('/api/statistics', statisticsRoutes);
 
 // ✅ Định tuyến API
 app.use('/api/accounts', require('./routes/account'));

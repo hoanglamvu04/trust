@@ -3,8 +3,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "../styles/Report.css";
 import React from 'react';
-
-const banks = [ "",
+const banks = ["",
   "Ví điện tử MoMo",
   "Ngân hàng TMCP Ngoại Thương Việt Nam (Vietcombank)",
   "Ngân hàng TMCP Công Thương Việt Nam (VietinBank)",
@@ -46,11 +45,12 @@ const banks = [ "",
   "Ngân hàng Chính sách Xã hội Việt Nam (VBSP)",
   "Ngân hàng Phát triển Việt Nam (VDB)",
   "Ngân hàng Hợp tác xã Việt Nam (Co-opBank)"
- ];
+];
 
 const categories = ["Lừa đảo", "Cảnh báo", "Spam", "Tích cực"];
 
 export default function Report() {
+
   const [form, setForm] = useState({
     accountName: "",
     accountNumber: "",
@@ -69,7 +69,8 @@ export default function Report() {
   const [accountNumberError, setAccountNumberError] = useState("");
   const [zaloError, setZaloError] = useState("");
   const [bankSearch, setBankSearch] = useState("");
-
+  const [agreedTerms, setAgreedTerms] = useState(false);
+  const [showTermsError, setShowTermsError] = useState(false);
   React.useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -87,7 +88,7 @@ export default function Report() {
     fetchUser();
   }, []);
 
-  const filteredBanks = banks.filter(bank => 
+  const filteredBanks = banks.filter(bank =>
     bank.toLowerCase().includes(bankSearch.toLowerCase())
   );
 
@@ -113,6 +114,11 @@ export default function Report() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!agreedTerms) {
+      setShowTermsError(true);
+      return;
+    }
+
 
     try {
       const res = await fetch("http://localhost:5000/api/report", {
@@ -121,7 +127,8 @@ export default function Report() {
         credentials: "include",
         body: JSON.stringify({
           ...form,
-          proof: form.proofs.map(file => file.name) // placeholder nếu không xử lý file
+          proof: form.proofs.map(file => file.name),
+          agreedTerms: true
         })
       });
 
@@ -159,7 +166,7 @@ export default function Report() {
     <>
       <Header />
       <main className="report-page">
-        <div className="report-title">Thông Tin Kẻ Lừa Đảo</div>
+        <div className="report-title">Gửi Thông Tin Cảnh Báo</div>
 
         <form className="report-form" onSubmit={handleSubmit}>
           {/* Các input giữ nguyên */}
@@ -243,7 +250,7 @@ export default function Report() {
           </div>
 
           <div className="form-group">
-            <label>Nội dung tố cáo *</label>
+            <label>Nội dung cảnh báo *</label>
             <textarea
               name="content"
               required
@@ -322,6 +329,26 @@ export default function Report() {
               />
               Tôi là nạn nhân và chịu trách nhiệm
             </label>
+          </div>
+          <div className="form-check">
+            <label>
+              <input
+                type="checkbox"
+                checked={agreedTerms}
+                onChange={(e) => {
+                  setAgreedTerms(e.target.checked);
+                  setShowTermsError(false);
+                }}
+              />{" "}
+              Tôi đã đọc và đồng ý với{" "}
+              <a href="/terms" target="_blank" rel="noopener noreferrer">
+                Điều khoản Dịch vụ
+              </a>{" "}
+              <span style={{ color: "red" }}>*</span>
+            </label>
+            {showTermsError && (
+              <p className="form-error">⚠ Bạn cần đồng ý điều khoản để tiếp tục.</p>
+            )}
           </div>
 
           <button type="submit" className="submit-btn">Gửi Duyệt</button>

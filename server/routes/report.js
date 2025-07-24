@@ -5,7 +5,7 @@ const verifyToken = require('../middlewares/verifyToken');
 
 router.get("/", verifyToken, controller.getMyReports);
 router.get('/all', controller.getAllReports); 
-router.get('/:id', controller.getReportById);
+router.get('/:id', verifyToken, controller.getReportById);
 router.post('/', controller.createReport);
 router.put('/:id/status', controller.updateReportStatus);
 router.put('/:id', controller.updateReportContent);

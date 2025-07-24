@@ -161,15 +161,37 @@ exports.deleteReport = async (req, res) => {
 };
 
 // ✅ Duyệt / từ chối report
+// ✅ Duyệt / từ chối report + gửi thông báo
 exports.approveReport = async (req, res) => {
   const { id } = req.params;
   const { status, rejectionReason } = req.body;
+  const senderId = req.session?.user?.id || null; // ✅ lấy admin id
 
   try {
+    const [[report]] = await db.query("SELECT * FROM reports WHERE id = ?", [id]);
+    if (!report) return res.status(404).json({ success: false, message: "Không tìm thấy báo cáo!" });
+
+    // Cập nhật trạng thái
     await db.query(
-      `UPDATE reports SET status=?, rejectionReason=? WHERE id=?`,
+      `UPDATE reports SET status = ?, rejectionReason = ? WHERE id = ?`,
       [status, status === "rejected" ? rejectionReason : null, id]
     );
+
+    // ✅ Gửi thông báo cho người gửi báo cáo
+    const notificationId = uuidv4();
+    const content =
+      status === "approved"
+        ? "✅ Báo cáo của bạn đã được duyệt thành công. Cảm ơn bạn đã đóng góp!"
+        : `❌ Báo cáo của bạn bị từ chối. Lý do: ${rejectionReason || "Không rõ"}`;
+
+    const link = `/report/${report.id}`;
+
+    await db.query(
+      `INSERT INTO notifications (id, userId, senderId, type, content, link, isRead, createdAt)
+       VALUES (?, ?, ?, 'report', ?, ?, 0, NOW())`,
+      [notificationId, report.userId, senderId, content, link]
+    );
+
     res.json({ success: true });
   } catch (err) {
     console.error("❌ approveReport error:", err);

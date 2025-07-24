@@ -17,6 +17,8 @@ import PhishingGmailQuizFull from "./pages/PhishingTestDoing";
 import TermsOfService from "./pages/TermsPage"; 
 import AboutUs from "./pages/AboutUs"; 
 import VisionStrategy from "./pages/VisionStrategy"; 
+import ScamSigns from "./pages/ScamSigns"; 
+
 // Admin Pages
 import AdminLayout from './admin/AdminLayout';
 import Dashboard from './admin/Dashboard';
@@ -30,6 +32,7 @@ import ManageCategories from './admin/ManageCategories';
 import ManageTests from './admin/ManageTests';
 import ManageQuestions from "./admin/ManageQuestions";
 import AddQuestion from "./admin/AddQuestion";
+import EditQuestion from "./admin/EditQuestion";
 import ManageUserResults from "./admin/ManageAnswerSessions";
 import AnswerSessionDetail from './admin/AnswerSessionDetail'
 
@@ -85,6 +88,7 @@ function AppWithChatbot() {
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/about" element={<AboutUs />} />
         <Route path="/vision" element={<VisionStrategy />} />
+        <Route path="/scam-signs" element={<ScamSigns />} />
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
           <Route path="dashboard" element={<Dashboard />} />
@@ -98,6 +102,7 @@ function AppWithChatbot() {
           <Route path="tests" element={<ManageTests />} />
           <Route path="questions" element={<ManageQuestions />} />
           <Route path="questions/new" element={<AddQuestion />} />
+          <Route path="questions/:id/edit" element={<EditQuestion />} />
           <Route path="user-results" element={<ManageUserResults />} />
           <Route path="answer-sessions/detail" element={<AnswerSessionDetail />} />
         </Route>

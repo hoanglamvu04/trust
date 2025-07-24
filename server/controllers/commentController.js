@@ -22,35 +22,46 @@ exports.getCommentsByReport = async (req, res) => {
   }
 };
 
-// Tạo bình luận mới (phải có nickname)
 exports.createComment = async (req, res) => {
   const { reportId, content } = req.body;
-  const commenterId = req.session.user.id;
-  // Lấy thông tin bài viết để biết ai là chủ bài viết
-  const [reportRows] = await db.query('SELECT id, userId FROM reports WHERE id = ?', [reportId]);
-  if (!reportRows.length) return res.status(404).json({ message: 'Không tìm thấy bài viết.' });
+  const userId = req.session?.user?.id || null;
 
-  const ownerId = reportRows[0].userId;
+  try {
+    // ✅ Kiểm tra báo cáo tồn tại và đã duyệt
+    const [[report]] = await db.query("SELECT id, userId, status FROM reports WHERE id = ?", [reportId]);
+    if (!report) return res.status(404).json({ message: "Không tìm thấy báo cáo" });
+    if (report.status !== 'approved') {
+      return res.status(403).json({ message: "Không thể bình luận vì báo cáo chưa được duyệt" });
+    }
 
-  // Lưu bình luận vào DB (giả sử bảng comments)
-  const commentId = uuidv4();
-  await db.query(
-    'INSERT INTO comments (id, reportId, userId, content) VALUES (?, ?, ?, ?)',
-    [commentId, reportId, commenterId, content]
-  );
+    // ✅ Tạo bình luận
+    const id = uuidv4();
+    await db.query(
+      'INSERT INTO comments (id, reportId, userId, content) VALUES (?, ?, ?, ?)',
+      [id, reportId, userId, content]
+    );
 
-  // Tạo thông báo nếu người bình luận khác chủ bài viết
-  if (ownerId !== commenterId) {
-    await createNotification({
-      userId: ownerId,
-      type: 'comment',
-      content: `${req.session.user.name} đã bình luận vào bài viết của bạn.`,
-      link: `/report/${reportId}`,
-    });
+    // ✅ Tạo thông báo cho người tạo báo cáo (nếu không phải chính mình)
+    if (userId && userId !== report.userId) {
+      const [[userRow]] = await db.query("SELECT nickname FROM users WHERE id = ?", [userId]);
+      const commenter = userRow?.nickname || "Ai đó";
+
+      await createNotification({
+        userId: report.userId,         // người nhận thông báo
+        senderId: userId,
+        type: 'comment',
+        content: `${commenter} đã bình luận vào báo cáo của bạn.`,
+        link: `/report/${reportId}`,
+      });
+    }
+
+    res.status(201).json({ message: 'Đã thêm bình luận!', id });
+  } catch (err) {
+    console.error('❌ Lỗi tạo bình luận:', err);
+    res.status(500).json({ message: 'Lỗi server khi tạo bình luận!' });
   }
-
-  res.status(201).json({ message: 'Đã bình luận!' });
 };
+
 
 // Like hoặc Unlike giữ nguyên (không liên quan nickname)
 exports.toggleLike = async (req, res) => {
@@ -84,20 +95,22 @@ exports.toggleLike = async (req, res) => {
 
     // Tạo thông báo nếu là lượt like mới và không phải tự like chính mình
     if (liked && userId !== row.userId) {
-      // Lấy tên người dùng like
+      // Lấy nickname người dùng like
       const [[userRow]] = await db.query(
-        "SELECT name FROM users WHERE id = ?",
+        "SELECT nickname FROM users WHERE id = ?",
         [userId]
       );
-      const likerName = userRow ? userRow.name : "Ai đó";
+      const likerName = userRow ? userRow.nickname : "Ai đó";
 
       await createNotification({
-        userId: row.userId, // chủ sở hữu comment
+        userId: row.userId,               // người nhận thông báo
+        senderId: userId,                // 👈 senderId cần để join ra nickname
         type: 'like',
         content: `${likerName} đã thích bình luận của bạn.`,
         link: `/report/${row.reportId}`,
       });
     }
+
 
     res.json({ message: "Cập nhật like thành công!", likes });
   } catch (err) {

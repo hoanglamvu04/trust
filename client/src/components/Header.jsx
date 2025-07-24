@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
-import React from 'react';
+import React, { useState, useEffect } from "react";
 import "./Header.css";
-import { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoginModal from "./LoginModal";
@@ -12,6 +11,7 @@ export default function Header() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
 
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
@@ -41,7 +41,23 @@ export default function Header() {
     fetchUser();
   }, []);
 
-  // ✅ Đồng bộ login/logout giữa các tab
+  // Lấy số thông báo chưa đọc
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      if (!user.isLoggedIn) return;
+      try {
+        const res = await fetch("http://localhost:5000/api/notifications/unread-count", {
+          credentials: "include",
+        });
+        const data = await res.json();
+        setUnreadCount(data.count || 0);
+      } catch (err) {
+        console.error("Lỗi lấy số thông báo chưa đọc:", err);
+      }
+    };
+    fetchUnreadCount();
+  }, [user]);
+
   useEffect(() => {
     const onStorageChange = (e) => {
       if (e.key === "auth-event") {
@@ -159,12 +175,12 @@ export default function Header() {
       <header className="header">
         <div className="container">
           <div className="logo">
-            <Link to="/"> <img src="/images/logoweb.png" alt="hm" /></Link>
+            <Link to="/"> <img src="/images/logoweb.png" alt="TrustCheck" /></Link>
           </div>
           <nav>
             <Link to="/check-account">Tra cứu Thông Tin</Link>
-          
-             <Link to="/phishing-test">Kiểm tra lừa đảo</Link>
+            <Link to="/phishing-test">Kiểm tra nhận biết lừa đảo</Link>
+            <Link to="/contact">Liên Hệ ADMIN</Link>
             <a className="nav-link" onClick={() => handleProtectedClick("/report")}>Gửi cảnh báo</a>
 
             {user.isLoggedIn ? (
@@ -172,14 +188,21 @@ export default function Header() {
                 <a className="nav-link" onClick={() => handleProtectedClick("/profile")}>
                   👤 {user.name}
                 </a>
-                <img
-                  src="/images/notification.png"
-                  alt="Thông báo"
-                  width="30"
-                  height="30"
-                  style={{ cursor: "pointer", verticalAlign: "middle", marginLeft: "10px" }}
+
+                <div
+                  className="notification-wrapper"
                   onClick={() => setShowNotificationModal(true)}
-                />
+                >
+                  <img
+                    src="/images/notification.png"
+                    alt="Thông báo"
+                    width="30"
+                    height="30"
+                    style={{ cursor: "pointer", verticalAlign: "middle", marginLeft: "10px" }}
+                  />
+                  {unreadCount > 0 && <span className="notification-dot"></span>}
+                </div>
+
                 <span className="nav-link" onClick={handleLogout}>Đăng xuất</span>
               </>
             ) : (

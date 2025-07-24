@@ -9,31 +9,35 @@ export default function NotificationModal({ show, onClose }) {
   const [confirmAction, setConfirmAction] = useState(() => () => {});
   const [reportNotifications, setReportNotifications] = useState([]);
   const [commentNotifications, setCommentNotifications] = useState([]);
+  const [likeNotifications, setLikeNotifications] = useState([]);
 
   useEffect(() => {
     if (!show) return;
 
     fetch(`/api/notifications?type=${activeTab}`, {
       method: "GET",
-      credentials: "include", // Gửi cookie session lên server
+      credentials: "include",
     })
       .then((res) => {
         if (!res.ok) throw new Error();
         return res.json();
       })
       .then((data) => {
-        if (activeTab === "report") {
-          setReportNotifications(data);
-        } else {
-          setCommentNotifications(data);
-        }
+        if (activeTab === "report") setReportNotifications(data);
+        else if (activeTab === "comment") setCommentNotifications(data);
+        else if (activeTab === "like") setLikeNotifications(data);
       })
       .catch(() => toast.error("Không thể tải dữ liệu thông báo."));
   }, [activeTab, show]);
 
   const handleMarkAllRead = () => {
-    const list = activeTab === "report" ? reportNotifications : commentNotifications;
-    list.forEach((n) => handleMarkAsRead(n.id)); // dùng `id` thay vì `_id`
+    const list =
+      activeTab === "report"
+        ? reportNotifications
+        : activeTab === "comment"
+        ? commentNotifications
+        : likeNotifications;
+    list.forEach((n) => handleMarkAsRead(n.id));
   };
 
   const confirmAndExecute = (action) => {
@@ -49,11 +53,9 @@ export default function NotificationModal({ show, onClose }) {
       })
         .then((res) => {
           if (!res.ok) throw new Error();
-          if (activeTab === "report") {
-            setReportNotifications([]);
-          } else {
-            setCommentNotifications([]);
-          }
+          if (activeTab === "report") setReportNotifications([]);
+          else if (activeTab === "comment") setCommentNotifications([]);
+          else if (activeTab === "like") setLikeNotifications([]);
           toast.success("Đã xóa tất cả thông báo.");
         })
         .catch(() => toast.error("Lỗi khi xóa tất cả."));
@@ -68,11 +70,12 @@ export default function NotificationModal({ show, onClose }) {
       })
         .then((res) => {
           if (!res.ok) throw new Error();
-          if (activeTab === "report") {
+          if (activeTab === "report")
             setReportNotifications((prev) => prev.filter((n) => n.id !== id));
-          } else {
+          else if (activeTab === "comment")
             setCommentNotifications((prev) => prev.filter((n) => n.id !== id));
-          }
+          else
+            setLikeNotifications((prev) => prev.filter((n) => n.id !== id));
           toast.success("Đã xóa thông báo.");
         })
         .catch(() => toast.error("Lỗi khi xóa thông báo."));
@@ -86,22 +89,25 @@ export default function NotificationModal({ show, onClose }) {
     })
       .then((res) => {
         if (!res.ok) throw new Error();
-        if (activeTab === "report") {
-          setReportNotifications((prev) =>
-            prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-          );
-        } else {
-          setCommentNotifications((prev) =>
-            prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-          );
-        }
+        const update = (prev) =>
+          prev.map((n) => (n.id === id ? { ...n, isRead: true } : n));
+        if (activeTab === "report") setReportNotifications(update);
+        else if (activeTab === "comment") setCommentNotifications(update);
+        else if (activeTab === "like") setLikeNotifications(update);
       })
       .catch(() => toast.error("Lỗi khi đánh dấu đã đọc."));
   };
 
-  const currentList = activeTab === "report" ? reportNotifications : commentNotifications;
+  const currentList =
+    activeTab === "report"
+      ? reportNotifications
+      : activeTab === "comment"
+      ? commentNotifications
+      : likeNotifications;
+
   const unreadCountReport = reportNotifications.filter((n) => !n.isRead).length;
   const unreadCountComment = commentNotifications.filter((n) => !n.isRead).length;
+  const unreadCountLike = likeNotifications.filter((n) => !n.isRead).length;
 
   if (!show) return null;
 
@@ -112,10 +118,13 @@ export default function NotificationModal({ show, onClose }) {
         <h3>Thông báo</h3>
         <div className="notificationmodal-tab-buttons">
           <button className={activeTab === "report" ? "active" : ""} onClick={() => setActiveTab("report")}>
-            📢 Tố Cáo ({unreadCountReport})
+            📢 Bài Cảnh Báo ({unreadCountReport})
           </button>
           <button className={activeTab === "comment" ? "active" : ""} onClick={() => setActiveTab("comment")}>
             💬 Bình Luận ({unreadCountComment})
+          </button>
+          <button className={activeTab === "like" ? "active" : ""} onClick={() => setActiveTab("like")}>
+            ❤️ Cảm Xúc ({unreadCountLike})
           </button>
         </div>
         <div className="notificationmodal-list">
@@ -124,8 +133,22 @@ export default function NotificationModal({ show, onClose }) {
           ) : (
             currentList.map((n) => (
               <div key={n.id} className="notificationmodal-item">
-                <a href={n.link} onClick={() => handleMarkAsRead(n.id)} className="notificationmodal-link">
-                  {n.content}
+                <a
+                  href={n.link}
+                  onClick={() => handleMarkAsRead(n.id)}
+                  className="notificationmodal-link"
+                >
+                  {n.content?.trim()
+                    ? n.content
+                    : n.senderName
+                    ? `${n.senderName} ${
+                        n.type === "comment"
+                          ? "đã bình luận vào bài viết của bạn."
+                          : n.type === "like"
+                          ? "đã thích bình luận của bạn."
+                          : "đã gửi tố cáo mới."
+                      }`
+                    : "Bạn có một thông báo mới."}
                 </a>
                 {!n.isRead && <span className="notificationmodal-dot"></span>}
                 <button className="notificationmodal-delete-btn" onClick={() => handleDelete(n.id)}>

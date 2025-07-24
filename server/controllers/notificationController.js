@@ -1,5 +1,4 @@
 // controllers/notificationController.js
-
 const db = require('../db');
 const { v4: uuidv4 } = require('uuid');
 
@@ -12,57 +11,67 @@ exports.requireLogin = (req, res, next) => {
 };
 
 /**
- * 📥 Lấy toàn bộ thông báo của user (có thể lọc theo type: report/comment/like...)
- * GET /api/notifications?type=comment
+ * Lấy danh sách thông báo của người dùng hiện tại
  */
 exports.getNotificationsByUser = async (req, res) => {
   const userId = req.session.user.id;
   const { type } = req.query;
 
   try {
-    let query = 'SELECT * FROM notifications WHERE userId = ?';
+    let query = `
+  SELECT n.*, u.nickname AS senderName
+  FROM notifications n 
+  LEFT JOIN users u ON n.senderId = u.id 
+  WHERE n.userId = ?
+`;
     const params = [userId];
 
-    if (type) {
-      query += ' AND type = ?';
+    if (type === 'report' || type === 'comment') {
+      query += ' AND n.type = ?';
       params.push(type);
     }
 
-    query += ' ORDER BY createdAt DESC';
+    query += ' ORDER BY n.createdAt DESC';
 
     const [rows] = await db.query(query, params);
     res.json(rows);
   } catch (err) {
     console.error('❌ Lỗi lấy thông báo:', err);
-    res.status(500).json({ message: 'Lỗi server!' });
+    res.status(500).json({ message: 'Lỗi server khi lấy thông báo' });
   }
-  // Log user id mỗi lần gọi API để debug
-  console.log("session id:", req.session.user.id);
 };
 
 /**
- * ➕ Tạo thông báo mới (có thể gọi từ hệ thống, không cần session)
- * POST /api/notifications
+ * Tạo thông báo thủ công (có xử lý tự động content nếu không có)
  */
-exports.createNotification = async (req, res) => {
-  const { userId, type, content, link } = req.body;
+exports.createNotification = async ({ userId, senderId, type, content, link }) => {
   const id = uuidv4();
 
-  try {
-    await db.query(
-      'INSERT INTO notifications (id, userId, type, content, link) VALUES (?, ?, ?, ?, ?)',
-      [id, userId, type, content, link || null]
-    );
-    res.status(201).json({ message: 'Đã tạo thông báo!', id });
-  } catch (err) {
-    console.error('❌ Lỗi tạo thông báo:', err);
-    res.status(500).json({ message: 'Lỗi server!' });
+  // Tự sinh nội dung nếu thiếu
+  if (!content && senderId) {
+    const [[user]] = await db.query('SELECT nickname FROM users WHERE id = ?', [senderId]);
+    const nickname = user?.nickname || 'Ai đó';
+    if (type === 'comment') {
+      content = `${nickname} đã bình luận vào bài viết của bạn.`;
+    } else if (type === 'like') {
+      content = `${nickname} đã thích bình luận của bạn.`;
+    } else {
+      content = `${nickname} đã gửi một thông báo đến bạn.`;
+    }
   }
+
+  if (!content) {
+    content = 'Bạn có thông báo mới.';
+  }
+
+  await db.query(
+    'INSERT INTO notifications (id, userId, senderId, type, content, link) VALUES (?, ?, ?, ?, ?, ?)',
+    [id, userId, senderId || null, type, content, link || null]
+  );
 };
 
 /**
  * ✔️ Đánh dấu đã đọc
- * PATCH /api/notifications/:id/read
  */
 exports.markAsRead = async (req, res) => {
   const { id } = req.params;
@@ -81,20 +90,77 @@ exports.markAsRead = async (req, res) => {
   }
 };
 
-// --- Hàm tiện ích dùng lại trong các controller khác --- //
 /**
- * Hàm tạo thông báo cho user, có thể dùng ở bất cứ đâu (import trực tiếp)
- * Ví dụ dùng cho comment, like, report...
- * @param {Object} param0
- * @param {string} param0.userId - id người nhận thông báo
- * @param {string} param0.type - loại thông báo
- * @param {string} param0.content - nội dung thông báo, đã bao gồm nickname hoặc tên, vd: 'LamzuZzz đã bình luận...'
- * @param {string} [param0.link] - link kèm theo (nếu có)
+ * 🔁 Hàm tiện ích gọi ở controller khác (comment, like, report,...)
+ * ⚠️ Đảm bảo phải truyền `senderId`, nếu không sẽ bị null
  */
-exports.createNotificationHelper = async ({ userId, type, content, link }) => {
+exports.createNotificationHelper = async ({ userId, senderId, type, content, link }) => {
   const id = uuidv4();
+
+  // Nếu thiếu nội dung, tự động sinh theo senderId
+  if (!content && senderId) {
+    const [[user]] = await db.query('SELECT nickname FROM users WHERE id = ?', [senderId]);
+    const nickname = user?.nickname || 'Ai đó';
+    if (type === 'comment') {
+      content = `${nickname} đã bình luận vào bài viết của bạn.`;
+    } else if (type === 'like') {
+      content = `${nickname} đã thích bình luận của bạn.`;
+    } else {
+      content = `${nickname} đã gửi một thông báo đến bạn.`;
+    }
+  }
+
+  if (!content) {
+    content = 'Bạn có thông báo mới.';
+  }
+
   await db.query(
-    'INSERT INTO notifications (id, userId, type, content, link) VALUES (?, ?, ?, ?, ?)',
-    [id, userId, type, content, link || null]
+    'INSERT INTO notifications (id, userId, senderId, type, content, link) VALUES (?, ?, ?, ?, ?, ?)',
+    [id, userId, senderId || null, type, content, link || null]
   );
+};
+/**
+ * ❌ Xóa một thông báo theo ID
+ */
+exports.deleteNotificationById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [result] = await db.query('DELETE FROM notifications WHERE id = ?', [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy thông báo!' });
+    }
+
+    res.json({ message: 'Đã xóa thông báo.' });
+  } catch (err) {
+    console.error('❌ Lỗi xóa thông báo:', err);
+    res.status(500).json({ message: 'Lỗi server khi xóa thông báo.' });
+  }
+};
+
+/**
+ * ❌ Xóa tất cả thông báo theo loại
+ */
+exports.deleteAllNotificationsByType = async (req, res) => {
+  const userId = req.session.user.id;
+  const { type } = req.query;
+
+  try {
+    let query = 'DELETE FROM notifications WHERE userId = ?';
+    const params = [userId];
+
+    // Chỉ lọc nếu type là hợp lệ
+    if (type === 'report' || type === 'comment' || type === 'like') {
+      query += ' AND type = ?';
+      params.push(type);
+    }
+
+    await db.query(query, params);
+
+    res.json({ message: 'Đã xóa tất cả thông báo.' });
+  } catch (err) {
+    console.error('❌ Lỗi xóa tất cả thông báo:', err);
+    res.status(500).json({ message: 'Lỗi server khi xóa tất cả.' });
+  }
 };

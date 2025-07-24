@@ -9,7 +9,6 @@ import React from "react";
 
 export default function ReportDetail() {
   const [report, setReport] = useState(null);
-  const [reportDetail, setReportDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const { id } = useParams();
   const [zoomedImage, setZoomedImage] = useState(null);
@@ -31,30 +30,38 @@ export default function ReportDetail() {
       setCurrentUser(storedUser);
     }
   }, []);
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/report-detail/${id}`, {
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error("Không tìm thấy báo cáo!");
+      const data = await res.json();
+      const storedUser = JSON.parse(localStorage.getItem("user"));
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-
-        const res = await fetch(`http://localhost:5000/api/report/${id}`);
-        if (!res.ok) throw new Error("Không tìm thấy báo cáo!");
-        const data = await res.json();
-        setReport(data);
-
-        const detailRes = await fetch(`http://localhost:5000/api/report-detail/${id}`);
-        const detailData = await detailRes.json();
-        if (Array.isArray(detailData) && detailData.length > 0) {
-          setReportDetail(detailData[0]);
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Lỗi: " + err.message);
-      } finally {
+      if (
+        data.status !== "approved" &&              // status, không phải approved
+        (!storedUser || storedUser.id !== data.userId)
+      ) {
+        alert("Báo cáo này chưa được duyệt hoặc bạn không có quyền truy cập.");
+        setReport(null);
         setLoading(false);
+        return;
       }
-    };
-    fetchData();
-  }, [id]);
+
+      setReport(data);
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchData();
+}, [id]);
+
+
 
   useEffect(() => {
     const hash = location.hash;
@@ -89,6 +96,25 @@ export default function ReportDetail() {
     }
   }
 
+  // Ẩn tên cuối, VD: "Nguyen Nguyen Diem Huong" => "Nguyen Nguyen Diem *"
+  function maskLastName(name) {
+    if (!name) return "";
+    name = name.trim();
+    // Nếu tên ngắn hơn 5 ký tự thì che hết thành *****
+    if (name.length <= 5) return "*".repeat(name.length);
+    // Che 5 ký tự cuối, giữ nguyên phần đầu
+    return name.slice(0, -5) + "*****";
+  }
+
+
+  // Che 4 số cuối STK, VD: "2345678908" => "234567****"
+  function maskAccountNumber(number) {
+    if (!number) return "";
+    const numStr = number.toString();
+    if (numStr.length <= 4) return "****";
+    return numStr.slice(0, -4) + "****";
+  }
+
   return (
     <>
       <Header />
@@ -105,28 +131,18 @@ export default function ReportDetail() {
             <tbody>
               <tr>
                 <td><img src="/images/chutk.png" alt="tk" /> Chủ TK:</td>
-                <td>{report.accountName}</td>
+                <td>{maskLastName(report.accountName)}</td>
               </tr>
               <tr>
                 <td><img src="/images/stk.png" alt="stk" /> STK:</td>
-                <td>{report.accountNumber} <span className="warning-icon">⚠️</span></td>
-              </tr>
-              <tr>
-                <td><img src="/images/bank.png" alt="bank" /> Ngân Hàng:</td>
-                <td>{report.bank}</td>
-              </tr>
-              <tr>
-                <td><img src="/images/fb.png" alt="fb" /> Facebook:</td>
                 <td>
-                  {report.facebookLink
-                    ? <a href={report.facebookLink} target="_blank" rel="noopener noreferrer">{report.facebookLink}</a>
-                    : "Không có link Facebook"}
+                  {maskAccountNumber(report.accountNumber)}
+                  <span className="warning-icon">⚠️</span>
                 </td>
               </tr>
-              <tr>
-                <td><img src="/images/details3.png" alt="hm" /> Hạng Mục:</td>
-                <td>{report.category || "Không xác định"}</td>
-              </tr>
+              <tr><td><img src="/images/bank.png" alt="bank" /> Ngân Hàng:</td><td>{report.bank}</td></tr>
+              <tr><td><img src="/images/fb.png" alt="fb" /> Facebook:</td><td>{report.facebookLink ? <a href={report.facebookLink} target="_blank" rel="noopener noreferrer">{report.facebookLink}</a> : "Không có link Facebook"}</td></tr>
+              <tr><td><img src="/images/details3.png" alt="hm" /> Hạng Mục:</td><td>{report.category || "Không xác định"}</td></tr>
               <tr>
                 <td><img src="/images/anh.png" alt="img" /> Ảnh Bằng Chứng:</td>
                 <td>
@@ -158,22 +174,6 @@ export default function ReportDetail() {
             </p>
             <p className="note">⚠️ <strong>Lưu ý:</strong> Bài đăng chỉ cung cấp thông tin cảnh báo, không kết luận cá nhân/tổ chức vi phạm pháp luật</p>
           </div>
-
-          {reportDetail && (
-            <div className="reporter-box">
-              <h3 className="blue-title">Người gửi:</h3>
-              <table className="reporter-table">
-                <tbody>
-                  <tr><td>Họ Và Tên:</td><td>{reportDetail.reporterName}</td></tr>
-                  <tr><td>Zalo Liên Hệ:</td><td>{reportDetail.zalo}</td></tr>
-                  <tr>
-                    <td>Tôi Muốn Gỡ Bài:</td>
-                    <td>Dùng Zalo số <strong>{reportDetail.zalo}</strong> gửi <strong>"Yêu Cầu Gỡ"</strong> tới <strong className="blue-text">Admin TrustCheck</strong></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          )}
 
           <CommentSection reportId={report.id} currentUser={currentUser} />
         </div>

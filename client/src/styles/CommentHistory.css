@@ -1,50 +1,82 @@
 .comment-section {
   margin-top: 20px;
-  padding: 10px;
-  font-family: Arial, sans-serif;
+  padding: 16px;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #fff;
+  animation: fadeIn 0.5s ease;
 }
 
+/* Tiêu đề */
 .comment-title {
-  font-size: 1.2em;
-  margin-top: 20px;
-  font-weight: bold;
-  color: #333;
+  font-size: 1.3em;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #2b2b2b;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 8px;
 }
 
+/* Mỗi bình luận */
 .comment-item {
-  border-bottom: 1px solid #ddd;
-  padding: 10px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.3s ease;
 }
 
+.comment-item:hover {
+  background-color: #fafafa;
+}
+
+/* Avatar */
+.comment-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #eee;
+  object-fit: cover;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.comment-item:hover .comment-avatar {
+  transform: scale(1.05);
+}
+
+/* Nội dung meta */
 .comment-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-  font-size: 0.9em;
+  font-size: 0.88em;
   color: #666;
-  margin-top: 5px;
+  margin-top: 4px;
 }
 
+/* Thời gian */
 .comment-time,
 .reply-time {
   display: flex;
   align-items: center;
-  color: #888;
+  color: #999;
 }
 
+/* Các nút */
 .comment-btn {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 0.9em;
-  padding: 4px 6px;
-  border-radius: 4px;
-  transition: background 0.2s ease;
+  font-size: 0.88em;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease, color 0.2s;
 }
 
 .comment-btn:hover {
-  background: #f0f0f0;
+  background: #f2f2f2;
 }
 
 .comment-btn.reply {
@@ -52,79 +84,177 @@
 }
 
 .comment-btn.delete {
-  color: red;
-  font-weight: bold;
+  color: #dc3545;
+  font-weight: 600;
 }
 
 .comment-btn.like {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .comment-btn.see-more {
   margin-top: 5px;
   color: #555;
   font-style: italic;
+  transition: color 0.2s;
 }
 
-.comment-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #eee;
-  object-fit: cover;
+.comment-btn.see-more:hover {
+  color: #333;
 }
 
+/* Nội dung trả lời */
 .reply-list {
-  margin-left: 20px;
+  margin-left: 48px;
   margin-top: 10px;
 }
 
 .reply-item {
-  padding: 8px 10px;
-  background: #f9f9f9;
-  border-left: 3px solid #ddd;
-  margin-bottom: 5px;
-  border-radius: 5px;
+  padding: 10px 14px;
+  background: #f5f5f5;
+  border-left: 3px solid #ccc;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  animation: fadeIn 0.3s ease;
 }
 
-.reply-box {
+/* Ô nhập */
+.reply-box,
+.comment-input {
   margin-top: 10px;
 }
 
-.reply-input {
-  width: 100%;
-  resize: vertical;
-  padding: 6px;
-  font-size: 0.9em;
-  margin-bottom: 5px;
-}
-
+.reply-input,
 .comment-input {
   width: 100%;
   resize: vertical;
-  padding: 6px;
-  margin-top: 5px;
-  font-size: 1em;
+  padding: 8px 10px;
+  font-size: 0.95em;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  transition: border-color 0.2s ease;
 }
 
+.reply-input:focus,
+.comment-input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+/* Phân trang */
 .pagination {
   display: flex;
   justify-content: center;
-  gap: 6px;
-  margin-top: 20px;
+  gap: 8px;
+  margin-top: 24px;
 }
 
 .pagination button {
   border: 1px solid #ccc;
-  background: white;
-  padding: 4px 10px;
-  border-radius: 4px;
+  background: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s, color 0.2s;
 }
 
-.pagination button:hover {
+.pagination button:hover:not(.active) {
+  background: #f2f2f2;
+}
+
+.pagination button.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+/* Hiệu ứng mượt */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.comment-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comment-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: background-color 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  border: 1px solid #eee;
+}
+
+.comment-card:hover {
+  background-color: #f9f9f9;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+.comment-icon {
+  color: #4dabf7;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.comment-content {
+  flex: 1;
+}
+
+.comment-text {
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.comment-text span {
+  color: #555;
+  font-weight: normal;
+}
+
+.comment-meta {
+  font-size: 0.88em;
+  color: #777;
+}
+
+/* Phân trang */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.pagination button {
+  border: 1px solid #ccc;
+  background: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.pagination button:hover:not(.active) {
   background: #f2f2f2;
 }
 

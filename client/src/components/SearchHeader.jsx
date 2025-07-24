@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./SearchHeader.css";
-import React from 'react';
+import React from "react";
+import { FiSearch } from "react-icons/fi";
+
+const user = JSON.parse(localStorage.getItem("user") || "{}");
+const userId = user?.id || null;
+console.log("USER OBJ:", user);
+console.log("userId gửi đi:", userId);
 
 export default function SearchHeader() {
   const [search, setSearch] = useState("");
@@ -37,16 +43,38 @@ export default function SearchHeader() {
   // Ít nhất 7 ký tự, chỉ chữ và số
   const isValidInput = search.length >= 7 && !hasSpecialChar;
 
-  const handleSearch = (e) => {
+  // Lưu log tìm kiếm kèm userId
+  const handleSearch = async (e) => {
     e.preventDefault();
-    if (isValidInput) {
-      navigate(`/check-account?search=${encodeURIComponent(search.trim())}`);
+    if (!isValidInput) return;
+
+    // Lấy userId từ localStorage (hoặc context/redux tuỳ bạn)
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const userId = user?.id || null;
+
+    // Gửi log tìm kiếm
+    try {
+      await fetch("http://localhost:5000/api/searchlog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          account: search.trim(),
+          userId,
+        }),
+      });
+    } catch (err) {
+      // Có thể hiển thị thông báo nhẹ nếu cần
+      console.error("Lỗi ghi log tìm kiếm:", err);
     }
+
+    // Chuyển trang
+    navigate(`/check-account?search=${encodeURIComponent(search.trim())}`);
   };
 
   return (
     <div className="search-header">
-      <h1>🔍 Kiểm Tra - Tố Cáo Kẻ Lừa Đảo</h1>
+      <h1>Tra Cứu Số Tài Khoản Đáng Ngờ</h1>
       <p>
         Hiện có <strong>{stats.accounts?.toLocaleString() || 0}</strong> bài viết cảnh báo, 
         <strong> {stats.comments?.toLocaleString() || 0}</strong> bình luận,
@@ -61,7 +89,9 @@ export default function SearchHeader() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <button type="submit" disabled={!isValidInput}>Tra cứu</button>
+        <button type="submit" disabled={!isValidInput}>
+          <FiSearch style={{ marginRight: 6 }} />Tra cứu
+        </button>
       </form>
       {/* Hiển thị lỗi dưới input */}
       {search && (
@@ -81,7 +111,7 @@ export default function SearchHeader() {
 
       <div className="action-buttons">
         <button className="btn-red" onClick={() => navigate("/report")}>
-          Gửi Tố Cáo Scam
+          Gửi Cảnh Báo
         </button>
         <button className="btn-blue" onClick={() => navigate("/contact")}>
           Liên Hệ Admin

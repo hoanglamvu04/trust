@@ -173,20 +173,53 @@ exports.updateNickname = async (req, res) => {
     return res.status(400).json({ success: false, message: "Vui lòng nhập biệt danh!" });
 
   try {
+    const [[user]] = await db.query(
+      "SELECT nickname, nicknameUpdatedAt FROM users WHERE id = ?",
+      [userId]
+    );
+
+    if (user.nickname === nickname.trim()) {
+      return res.status(400).json({ success: false, message: "Biệt danh không có thay đổi." });
+    }
+
+    // Kiểm tra thời gian đổi gần nhất
+    if (user.nicknameUpdatedAt) {
+      const lastUpdate = new Date(user.nicknameUpdatedAt);
+      const now = new Date();
+      const diffInDays = Math.floor((now - lastUpdate) / (1000 * 60 * 60 * 24));
+      const nextAllowed = new Date(lastUpdate.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+      if (diffInDays < 14) {
+        return res.status(400).json({
+          success: false,
+          blockUntil: nextAllowed.toISOString(),
+          message: `Bạn chỉ được đổi biệt danh mỗi 14 ngày. Hãy thử lại sau ngày ${nextAllowed.toLocaleDateString("vi-VN")}.`,
+        });
+      }
+    }
+
+    // Kiểm tra trùng biệt danh
     const [exist] = await db.query(
       "SELECT id FROM users WHERE nickname = ? AND id != ?",
-      [nickname, userId]
+      [nickname.trim(), userId]
     );
-    if (exist.length > 0)
-      return res.status(400).json({ success: false, message: "Biệt danh đã tồn tại. Chọn biệt danh khác!" });
+    if (exist.length > 0) {
+      return res.status(400).json({ success: false, message: "Biệt danh đã tồn tại." });
+    }
 
-    await db.query("UPDATE users SET nickname = ? WHERE id = ?", [nickname, userId]);
+    await db.query(
+      "UPDATE users SET nickname = ?, nicknameUpdatedAt = NOW() WHERE id = ?",
+      [nickname.trim(), userId]
+    );
+
     res.json({ success: true, message: "Cập nhật biệt danh thành công!", nickname });
   } catch (err) {
     console.error("❌ updateNickname error:", err);
     res.status(500).json({ success: false, message: "Lỗi server!" });
   }
 };
+
+
 
 // Reset mật khẩu user (API)
 exports.resetPassword = async (req, res) => {

@@ -3,7 +3,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SidebarProfile from "../components/SidebarProfile";
 import "../styles/ReportHistory.css";
-import React from 'react';
+import React from "react";
 
 export default function ReportHistory() {
   const [filter, setFilter] = useState("all");
@@ -18,9 +18,8 @@ export default function ReportHistory() {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        // Đã xác thực: chỉ trả về report của user hiện tại
         const res = await fetch("http://localhost:5000/api/report", {
-          credentials: "include" // Nếu bạn dùng cookie để lưu token
+          credentials: "include",
         });
         const data = await res.json();
         setReports(Array.isArray(data) ? data : []);
@@ -33,6 +32,12 @@ export default function ReportHistory() {
 
   const filteredReports =
     filter === "all" ? reports : reports.filter((r) => r.status === filter);
+
+  const handleViewReport = (r) => {
+    if (r.id) {
+      window.location.href = `/report/${r.id}`;
+    }
+  };
 
   return (
     <>
@@ -47,86 +52,59 @@ export default function ReportHistory() {
           <div className="filter-wrapper">
             <div className="status-filter">
               <button
-                className={filter === "pending" ? "active" : ""}
+                className={"status-btn pending" + (filter === "pending" ? " active" : "")}
                 onClick={() => toggleFilter("pending")}
               >
-                <img
-                  src="/icons/waiting.png"
-                  width="25"
-                  height="25"
-                  alt="pending"
-                />{" "}
+                <img src="/icons/waiting.png" width="25" height="25" alt="pending" />
                 Chờ duyệt
               </button>
               <button
-                className={filter === "approved" ? "active" : ""}
+                className={"status-btn approved" + (filter === "approved" ? " active" : "")}
                 onClick={() => toggleFilter("approved")}
               >
-                <img
-                  src="/icons/approved.png"
-                  width="25"
-                  height="25"
-                  alt="approved"
-                />{" "}
+                <img src="/icons/approved.png" width="25" height="25" alt="approved" />
                 Đã đăng
               </button>
               <button
-                className={filter === "rejected" ? "active" : ""}
+                className={"status-btn rejected" + (filter === "rejected" ? " active" : "")}
                 onClick={() => toggleFilter("rejected")}
               >
-                <img
-                  src="/icons/refusal.png"
-                  width="25"
-                  height="25"
-                  alt="rejected"
-                />{" "}
-                Đã huỷ
+                <img src="/icons/refusal.png" width="25" height="25" alt="rejected" />
+                Từ chối
               </button>
             </div>
+
           </div>
 
-          {/* Danh sách report */}
+          {/* Danh sách báo cáo */}
           <ul className="report-list">
-            {filteredReports.length === 0 ? (
-              <p>Không có dữ liệu.</p>
-            ) : (
-              filteredReports.map((r) => (
-                <li
-                  key={r._id}
-                  className={r.status === "approved" ? "clickable" : ""}
-                  onClick={() =>
-                    r.status === "approved" && (window.location.href = `/report/${r._id}`)
-                  }
-                >
-                  <div className="report-header">
-                    <h4>{r.accountName} - {r.accountNumber}</h4>
-                    <div className="meta">
-                      <span>{new Date(r.createdAt).toLocaleDateString()}</span>
-                    </div>
-                  </div>
+  {filteredReports.length === 0 ? (
+    <p>Không có dữ liệu.</p>
+  ) : (
+    filteredReports.map((r) => (
+      <li
+        key={r.id}
+        className={"report-item clickable"}
+        onClick={() => handleViewReport(r)}
+      >
+        <div className="report-main">
+          <span className="report-title">
+            {r.accountName} - {r.accountNumber}
+          </span>
+          <span className="report-date">
+            {new Date(r.createdAt).toLocaleDateString()}
+          </span>
+          <span className="report-status-badge" data-status={r.status}>
+            {r.status === "approved" && "✔ Đã đăng"}
+            {r.status === "pending" && "⏳ Chờ duyệt"}
+            {r.status === "rejected" && "✖ Từ chối"}
+          </span>
+        </div>
+      </li>
+    ))
+  )}
+</ul>
 
-                  {r.status === "rejected" && (
-                    <>
-                      <button
-                        className="btn-view"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowReason(showReason === r._id ? null : r._id);
-                        }}
-                      >
-                        Xem lý do
-                      </button>
-                      {showReason === r._id && (
-                        <p className="rejection-reason">
-                          <strong>Lý do từ chối:</strong> {r.rejectionReason || "Không có lý do"}
-                        </p>
-                      )}
-                    </>
-                  )}
-                </li>
-              ))
-            )}
-          </ul>
         </main>
       </div>
       <Footer />

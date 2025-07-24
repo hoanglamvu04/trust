@@ -7,4 +7,6 @@ router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.get('/me', verifyToken, authController.getCurrentUser);
 router.post('/logout', authController.logout);
+router.post('/change-password', verifyToken, authController.changePassword); // <<-- THÊM DÒNG NÀY
+
 module.exports = router;

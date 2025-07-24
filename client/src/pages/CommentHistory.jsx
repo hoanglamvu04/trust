@@ -4,6 +4,7 @@ import Footer from "../components/Footer";
 import SidebarProfile from "../components/SidebarProfile";
 import "../styles/CommentHistory.css";
 import React from "react";
+import { FaCommentDots } from "react-icons/fa"; // 👉 Icon đẹp thay cho 📝
 
 export default function CommentHistory() {
   const [comments, setComments] = useState([]);
@@ -14,7 +15,7 @@ export default function CommentHistory() {
     const fetchComments = async () => {
       try {
         const res = await fetch("http://localhost:5000/api/comment/my", {
-          credentials: "include", // Đảm bảo gửi cookie/session
+          credentials: "include",
         });
 
         if (!res.ok) {
@@ -66,24 +67,23 @@ export default function CommentHistory() {
               currentComments.map((c) => (
                 <li
                   key={c.id}
-                  className="comment-item"
+                  className="comment-card"
                   onClick={() =>
                     window.location.href = `/report/${c.reportId}#comment${c.id}`
                   }
-                  style={{ cursor: "pointer" }}
-                  title="Xem bài báo cáo mà bạn đã bình luận"
+                  title="Xem bài báo cáo bạn đã bình luận"
                 >
-                  <div style={{ fontWeight: 500 }}>
-                    📝 Bình luận: <span style={{ color: "#444" }}>{c.content}</span>
+                  <div className="comment-icon">
+                    <FaCommentDots size={20} />
                   </div>
-                  <div className="meta">
-                    <span>
-                      Biệt danh: <b>{c.nickname || "Ẩn danh"}</b>
-                    </span>{" "}
-                    •{" "}
-                    <span>
-                      Ngày: {new Date(c.createdAt).toLocaleDateString("vi-VN")}
-                    </span>
+                  <div className="comment-content">
+                    <div className="comment-text">
+                      Bình luận: <span>{c.content}</span>
+                    </div>
+                    <div className="comment-meta">
+                      Biệt danh: <b>{c.nickname || "Ẩn danh"}</b> • Ngày:{" "}
+                      {new Date(c.createdAt).toLocaleDateString("vi-VN")}
+                    </div>
                   </div>
                 </li>
               ))

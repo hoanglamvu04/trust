@@ -1,0 +1,71 @@
+.scam-signs-page {
+  max-width: 1500px;
+  margin: 30px auto 40px auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 14px rgba(0,0,0,0.05);
+  padding: 34px 24px 28px 24px;
+}
+
+.scam-signs-title {
+  font-size: 2rem;
+  color: #199962;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.scam-signs-desc {
+  text-align: center;
+  color: #444;
+  margin-bottom: 24px;
+  font-size: 1.1rem;
+}
+
+.scam-signs-accordion {
+  margin-top: 12px;
+}
+
+.ss-accordion-item {
+  border-radius: 11px;
+  background: #f4faf5;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 8px rgba(76,180,130,0.06);
+  overflow: hidden;
+}
+
+.ss-accordion-title {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #199962;
+  font-weight: bold;
+  font-size: 1.09rem;
+  padding: 16px 20px;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.18s;
+}
+.ss-accordion-title.active,
+.ss-accordion-title:hover {
+  background: #e0f6eb;
+}
+.ss-arrow {
+  font-size: 1.2rem;
+}
+
+.ss-accordion-content {
+  padding: 12px 24px 18px 28px;
+  color: #234;
+  font-size: 1.05rem;
+  animation: fadeInAccordion 0.3s;
+}
+
+@keyframes fadeInAccordion {
+  from { opacity: 0; transform: translateY(-8px);}
+  to   { opacity: 1; transform: translateY(0);}
+}

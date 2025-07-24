@@ -81,8 +81,8 @@ export default function ManageComments() {
 
     const method = editing ? "PUT" : "POST";
     const url = editing
-      ? `/api/admin/comments/${editing}`
-      : `/api/admin/comments`;
+      ? `/api/admin/comment/${editing}`
+      : `/api/admin/comment`;
 
     const body = editing
       ? JSON.stringify({ content: form.content })

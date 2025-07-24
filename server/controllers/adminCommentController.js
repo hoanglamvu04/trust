@@ -96,36 +96,28 @@ exports.getAdminComments = async (req, res) => {
 
 // ===== Thêm comment ẩn danh =====
 exports.createAdminComment = async (req, res) => {
-  const { userId, reportId, content } = req.body;
-  const id = uuidv4();
-
-  if (!userId || !reportId || !content) {
-    return res.status(400).json({ success: false, message: 'Thiếu dữ liệu' });
-  }
-
+  const { reportId, userId, content } = req.body;
+  // userId ở đây là người mà admin muốn gán comment (từ select)
+  // Nếu muốn lưu thêm id admin là người gửi, bạn có thể thêm trường adminId nếu cần.
   try {
-    // Kiểm tra user + report tồn tại
-    const [[user]] = await db.query('SELECT id FROM users WHERE id = ?', [userId]);
-    const [[report]] = await db.query('SELECT id FROM reports WHERE id = ?', [reportId]);
-    if (!user || !report) {
-      return res.status(404).json({ success: false, message: 'User hoặc Report không tồn tại' });
-    }
+    // Kiểm tra báo cáo
+    const [[report]] = await db.query("SELECT id FROM reports WHERE id = ?", [reportId]);
+    if (!report) return res.status(404).json({ message: "Không tìm thấy báo cáo" });
 
-    // Gán alias cho admin nếu đã từng bình luận report này, chưa có thì random
-    const alias = await ensureAlias(userId, reportId);
-
+    // Tạo bình luận (gán cho userId đã chọn)
+    const id = uuidv4();
     await db.query(
-      `INSERT INTO comments (id, userId, reportId, alias, content, likes, replies, createdAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [id, userId, reportId, alias, content, JSON.stringify([]), JSON.stringify([])]
+      'INSERT INTO comments (id, reportId, userId, content, isAdmin) VALUES (?, ?, ?, ?, 1)',
+      [id, reportId, userId, content]
     );
 
-    res.json({ success: true, comment: { id, userId, reportId, content, alias } });
+    res.status(201).json({ message: 'Đã thêm bình luận admin!', id });
   } catch (err) {
-    console.error('❌ Lỗi thêm comment:', err);
-    res.status(500).json({ success: false, message: 'Lỗi server!' });
+    console.error('❌ Lỗi tạo bình luận admin:', err);
+    res.status(500).json({ message: 'Lỗi server khi tạo bình luận admin!' });
   }
 };
+
 
 // ===== Sửa comment =====
 exports.updateAdminComment = async (req, res) => {

@@ -1,12 +1,9 @@
 /* ========== Check Account Styles ========== */
 .check-account-page {
   max-width: 1500px;
-  margin: 2rem auto;
-  padding: 2rem 3rem;
   font-family: Arial, sans-serif;
   background: #f9fbff;
   width: 85%;
-  min-height: calc(100vh - 150px);
   box-sizing: border-box;
 }
 

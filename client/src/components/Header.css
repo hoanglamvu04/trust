@@ -109,3 +109,18 @@ nav a:hover, .nav-link:hover {
   cursor: pointer;
   text-decoration: underline;
 }
+.notification-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.notification-dot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 10px;
+  height: 10px;
+  background-color: red;
+  border-radius: 50%;
+  border: 2px solid white;
+}
