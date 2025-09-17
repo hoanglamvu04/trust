@@ -178,9 +178,9 @@ export default function Header() {
             <Link to="/"> <img src="/images/logoweb.png" alt="TrustCheck" /></Link>
           </div>
           <nav>
-            <Link to="/check-account">Tra cứu Thông Tin</Link>
-            <Link to="/phishing-test">Kiểm tra nhận biết lừa đảo</Link>
-            <Link to="/contact">Liên Hệ ADMIN</Link>
+              <a className="nav-link" onClick={() => handleProtectedClick("/check-account")}>Tra cứu Thông Tin</a>
+              <a className="nav-link" onClick={() => handleProtectedClick("/phishing-test")}>Kiểm tra nhận biết lừa đảo</a>
+              <a className="nav-link" onClick={() => handleProtectedClick("/contact")}>Liên Hệ ADMIN</a>
             <a className="nav-link" onClick={() => handleProtectedClick("/report")}>Gửi cảnh báo</a>
 
             {user.isLoggedIn ? (

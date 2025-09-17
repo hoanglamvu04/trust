@@ -2,6 +2,53 @@ const db = require("../db");
 const { v4: uuidv4 } = require("uuid");
 const { createNotification } = require('../utils/notification');
 
+
+const BAD_WORDS = [
+  // Từ tục, bậy phổ biến
+  "địt", "đụ", "lồn", "cặc", "đéo", "bướm", "bú", "đĩ", "dâm", "bố mày", "bà mày", "mẹ mày",
+  "vkl", "vcl", "cl", "cmm", "dm", "đm", "cc", "cái lìn", "lìn", "đíu", "cu", "thằng chó", "con chó",
+  "óc chó", "ngu", "chó má", "mẹ kiếp", "khốn nạn", "đú", "đú mợ", "thằng khốn", "đồ chó", "dốt",
+  "rảnh chó", "súc vật", "khốn", "fuck", "shit", "asshole", "bastard", "fucking", "motherfucker", "pussy",
+  // Viết tắt biến thể
+  "dm", "đm", "cl", "cmm", "vkl", "vcl", "cc",
+  // Một số cụm từ miệt thị, bạo lực, toxic
+  "bố láo", "bố đời", "vô học", "láo toét", "láo lếu", "láo nháo", "ngu học", "khựa", "tục tĩu", "bẩn bựa", "rác rưởi",
+  // Biến thể
+  "ncc", "ml", "dmm", "đmm", "con điên", "con dở hơi", "thằng ngu", "con ngu", "bẩn thỉu", "khốn khiếp", "rẻ rách",
+  "bựa", "bẩn", "đần", "đần độn", "đồ ngu", "kệ mẹ", "cút", "súc sinh", "cave", "đĩ điếm", "giẻ rách", "lâm vũ"
+];
+
+
+// Chuẩn hóa, loại bỏ ký tự đặc biệt, viết thường
+function normalizeVNText(str) {
+  return str
+    .toLowerCase()
+    .normalize('NFC') // giữ đúng chữ tiếng Việt
+    .replace(/[^a-z0-9\s\u00C0-\u1EF9]/gi, ' ') // chỉ giữ chữ và số, khoảng trắng, ký tự unicode tiếng Việt
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function containsBadWord(text) {
+  if (!text) return false;
+  const normalized = normalizeVNText(text);
+  const words = normalized.split(' ');
+
+  // Kiểm tra từng BAD_WORDS
+  return BAD_WORDS.some(word => {
+    const wordNorm = normalizeVNText(word);
+    // Nếu là cụm (có dấu cách) => kiểm tra exact cụm trong bình luận
+    if (wordNorm.includes(' ')) {
+      // match cả cụm trong câu
+      return normalized.includes(wordNorm);
+    }
+    // Nếu là 1 từ => match từng từ trong bình luận (không match 1 phần)
+    return words.includes(wordNorm);
+  });
+}
+
+
+
 // Lấy bình luận theo report, kèm nickname user
 exports.getCommentsByReport = async (req, res) => {
   const { reportId } = req.params;
@@ -25,6 +72,11 @@ exports.getCommentsByReport = async (req, res) => {
 exports.createComment = async (req, res) => {
   const { reportId, content } = req.body;
   const userId = req.session?.user?.id || null;
+
+  // 🛑 Kiểm duyệt từ ngữ không phù hợp trước khi xử lý tiếp
+  if (containsBadWord(content)) {
+    return res.status(400).json({ message: "Bình luận chứa từ ngữ không phù hợp!" });
+  }
 
   try {
     // ✅ Kiểm tra báo cáo tồn tại và đã duyệt
@@ -61,6 +113,7 @@ exports.createComment = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server khi tạo bình luận!' });
   }
 };
+
 
 
 // Like hoặc Unlike giữ nguyên (không liên quan nickname)

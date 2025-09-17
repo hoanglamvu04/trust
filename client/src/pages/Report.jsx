@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "../styles/Report.css";
-import React from 'react';
+import React from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const banks = ["",
   "Ví điện tử MoMo",
   "Ngân hàng TMCP Ngoại Thương Việt Nam (Vietcombank)",
@@ -71,21 +74,28 @@ export default function Report() {
   const [bankSearch, setBankSearch] = useState("");
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [showTermsError, setShowTermsError] = useState(false);
-  React.useEffect(() => {
-    const fetchUser = async () => {
+
+  // ✅ Kiểm tra đăng nhập khi vào trang
+  useEffect(() => {
+    const checkAuth = async () => {
       try {
         const res = await fetch("http://localhost:5000/api/auth/me", {
-          credentials: "include"
+          credentials: "include",
         });
-        const data = await res.json();
-        if (data.success) {
-          setForm(prev => ({ ...prev, userId: data.user.id }));
+        const result = await res.json();
+        if (!result.success) {
+          toast.error("Chưa đăng nhập!", { position: "top-right" });
+          setTimeout(() => (window.location.href = "/"), 1500);
+        } else {
+          // Nếu muốn lấy userId để gửi kèm form
+          setForm(prev => ({ ...prev, userId: result.user.id }));
         }
       } catch (err) {
-        console.error("Lỗi lấy user:", err);
+        toast.error("Lỗi kết nối server!", { position: "top-right" });
+        setTimeout(() => (window.location.href = "/"), 1500);
       }
     };
-    fetchUser();
+    checkAuth();
   }, []);
 
   const filteredBanks = banks.filter(bank =>
@@ -118,7 +128,6 @@ export default function Report() {
       setShowTermsError(true);
       return;
     }
-
 
     try {
       const res = await fetch("http://localhost:5000/api/report", {

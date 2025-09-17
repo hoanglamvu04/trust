@@ -100,7 +100,8 @@ export default function ManageUsers() {
       password: "",
       nickname: user.nickname || "",
       status: user.status,
-      roleId: user.roleId || 4
+      roleId: user.roleId || 4,
+      diaChi: user.diaChi,
     });
     setShowModal(true);
   };
@@ -157,6 +158,7 @@ export default function ManageUsers() {
               <th>Trạng thái</th>
               <th>Ngày tạo</th>
               <th>Hành động</th>
+              <th>Địa Chỉ</th>
             </tr>
           </thead>
           <tbody>
@@ -204,6 +206,8 @@ export default function ManageUsers() {
               <input name="name" value={form.name} onChange={handleChange} placeholder="Họ và tên" required />
               <input name="email" value={form.email} onChange={handleChange} placeholder="Email" required />
               <input name="nickname" value={form.nickname} onChange={handleChange} placeholder="Biệt danh" required />
+              <input name="diaChi" value={form.diaChi} onChange={handleChange} placeholder="Địa chỉ" required />
+
               <input
                 name="password"
                 type="password"

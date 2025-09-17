@@ -78,32 +78,32 @@ export default function ReportHistory() {
 
           {/* Danh sách báo cáo */}
           <ul className="report-list">
-  {filteredReports.length === 0 ? (
-    <p>Không có dữ liệu.</p>
-  ) : (
-    filteredReports.map((r) => (
-      <li
-        key={r.id}
-        className={"report-item clickable"}
-        onClick={() => handleViewReport(r)}
-      >
-        <div className="report-main">
-          <span className="report-title">
-            {r.accountName} - {r.accountNumber}
-          </span>
-          <span className="report-date">
-            {new Date(r.createdAt).toLocaleDateString()}
-          </span>
-          <span className="report-status-badge" data-status={r.status}>
-            {r.status === "approved" && "✔ Đã đăng"}
-            {r.status === "pending" && "⏳ Chờ duyệt"}
-            {r.status === "rejected" && "✖ Từ chối"}
-          </span>
-        </div>
-      </li>
-    ))
-  )}
-</ul>
+            {filteredReports.length === 0 ? (
+              <p>Không có dữ liệu.</p>
+            ) : (
+              filteredReports.map((r) => (
+                <li
+                  key={r.id}
+                  className={"report-item clickable"}
+                  onClick={() => handleViewReport(r)}
+                >
+                  <div className="report-main">
+                    <span className="report-title">
+                      {r.accountName} - {r.accountNumber}
+                    </span>
+                    <span className="report-date">
+                      {new Date(r.createdAt).toLocaleDateString()}
+                    </span>
+                    <span className="report-status-badge" data-status={r.status}>
+                      {r.status === "approved" && "✔ Đã đăng"}
+                      {r.status === "pending" && "⏳ Chờ duyệt"}
+                      {r.status === "rejected" && "✖ Từ chối"}
+                    </span>
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
 
         </main>
       </div>

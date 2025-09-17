@@ -37,7 +37,7 @@ exports.getUserById = async (req, res) => {
 
 // Tạo tài khoản người dùng
 exports.createUser = async (req, res) => {
-  const { username, name, email, password, nickname, status, roleId } = req.body;
+  const { username, name, email, password, nickname, status, roleId, diachi } = req.body;
   const id = uuidv4();
   const safeRoleId = parseInt(roleId);
   const finalRoleId = [1, 2, 3].includes(safeRoleId) ? safeRoleId : 4;
@@ -47,7 +47,7 @@ exports.createUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await db.query(
-      `INSERT INTO users (id, username, name, email, password, nickname, status, roleId, tokenVersion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+      `INSERT INTO users (id, username, name, email, password, nickname, status, roleId, tokenVersion, diaChi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
       [id, username, name, email, hashedPassword, nickname, userStatus, finalRoleId]
     );
 
