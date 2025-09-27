@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../styles/AdminStyles.css";
 import "../styles/AdminReports.css";
-import React from "react";
 
 export default function ManageReports() {
   const [reports, setReports] = useState([]);
@@ -17,16 +16,15 @@ export default function ManageReports() {
   const [rejectId, setRejectId] = useState(null);
   const navigate = useNavigate();
 
-  // ✅ Hàm lấy danh sách reports (có credentials)
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+
   const fetchReports = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/admin/reports?search=${encodeURIComponent(
-          search
-        )}&status=${encodeURIComponent(statusFilter)}&page=${page}`,
-        {
-          credentials: "include", // Gửi cookie JWT để xác thực
-        }
+        `${API_BASE}/admin/reports?search=${encodeURIComponent(search)}&status=${encodeURIComponent(
+          statusFilter
+        )}&page=${page}`,
+        { credentials: "include" }
       );
       const json = await res.json();
       if (json.success) {
@@ -40,17 +38,15 @@ export default function ManageReports() {
     }
   };
 
-  // ✅ Lấy dữ liệu mỗi khi search/status/page đổi
   useEffect(() => {
     fetchReports();
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, statusFilter, page]);
 
-  // ✅ Xoá một report
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn chắc chắn muốn xoá?")) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/reports/${id}`, {
+      const res = await fetch(`${API_BASE}/admin/reports/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -66,18 +62,14 @@ export default function ManageReports() {
     }
   };
 
-  // ✅ Duyệt report
   const handleApprove = async (id) => {
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/admin/reports/${id}/approve`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ status: "approved" }),
-        }
-      );
+      const res = await fetch(`${API_BASE}/admin/reports/${id}/approve`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status: "approved" }),
+      });
       const json = await res.json();
       if (json.success) {
         toast.success("✅ Đã duyệt!");
@@ -90,28 +82,20 @@ export default function ManageReports() {
     }
   };
 
-  // ✅ Mở modal từ chối
   const openReject = (id) => {
     setRejectId(id);
     setRejectReason("");
     setShowRejectModal(true);
   };
 
-  // ✅ Từ chối report
   const handleReject = async () => {
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/admin/reports/${rejectId}/approve`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            status: "rejected",
-            rejectionReason: rejectReason,
-          }),
-        }
-      );
+      const res = await fetch(`${API_BASE}/admin/reports/${rejectId}/approve`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status: "rejected", rejectionReason: rejectReason }),
+      });
       const json = await res.json();
       if (json.success) {
         toast.success("❌ Đã từ chối!");
@@ -125,7 +109,7 @@ export default function ManageReports() {
     }
   };
 
-  const totalPages = Math.ceil(total / 30);
+  const totalPages = Math.ceil(total / 30) || 1;
 
   return (
     <div className="admin-container">
@@ -134,14 +118,14 @@ export default function ManageReports() {
         <div className="header-actions">
           <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             placeholder="🔍 Nhập STK Hoặc Tên CTK..."
             style={{ flex: 1, minWidth: "220px" }}
           />
-          <button
-            onClick={() => navigate("/admin/reports/new")}
-            className="btn-add"
-          >
+          <button onClick={() => navigate("/admin/reports/new")} className="btn-add">
             Thêm Report
           </button>
         </div>
@@ -157,9 +141,7 @@ export default function ManageReports() {
               setPage(1);
             }}
           >
-            {status === ""
-              ? "Tất cả"
-              : status.charAt(0).toUpperCase() + status.slice(1)}
+            {status === "" ? "Tất cả" : status.charAt(0).toUpperCase() + status.slice(1)}
           </button>
         ))}
       </div>
@@ -185,30 +167,18 @@ export default function ManageReports() {
                 <td>{r.status}</td>
                 <td>{new Date(r.createdAt).toLocaleString("vi-VN")}</td>
                 <td className="action-buttons">
-                  <button
-                    onClick={() => navigate(`/admin/reports/${r.id}`)}
-                    className="btn-outline"
-                  >
+                  <button onClick={() => navigate(`/admin/reports/${r.id}`)} className="btn-outline">
                     Chi tiết
                   </button>
-                  <button
-                    onClick={() => handleDelete(r.id)}
-                    className="btn-red"
-                  >
+                  <button onClick={() => handleDelete(r.id)} className="btn-red">
                     Xoá
                   </button>
                   {r.status === "pending" && (
                     <>
-                      <button
-                        onClick={() => handleApprove(r.id)}
-                        className="btn-green"
-                      >
+                      <button onClick={() => handleApprove(r.id)} className="btn-green">
                         Duyệt
                       </button>
-                      <button
-                        onClick={() => openReject(r.id)}
-                        className="btn-orange"
-                      >
+                      <button onClick={() => openReject(r.id)} className="btn-orange">
                         Từ chối
                       </button>
                     </>
@@ -221,19 +191,13 @@ export default function ManageReports() {
       </div>
 
       <div className="pagination">
-        <button
-          disabled={page === 1}
-          onClick={() => setPage(page - 1)}
-        >
+        <button disabled={page === 1} onClick={() => setPage(page - 1)}>
           ◀
         </button>
         <span>
-          Trang {page}/{totalPages || 1}
+          Trang {page}/{totalPages}
         </span>
-        <button
-          disabled={page === totalPages}
-          onClick={() => setPage(page + 1)}
-        >
+        <button disabled={page === totalPages} onClick={() => setPage(page + 1)}>
           ▶
         </button>
       </div>
@@ -249,10 +213,7 @@ export default function ManageReports() {
             />
             <div className="modal-actions">
               <button onClick={handleReject}>Xác nhận</button>
-              <button
-                className="btn-cancel"
-                onClick={() => setShowRejectModal(false)}
-              >
+              <button className="btn-cancel" onClick={() => setShowRejectModal(false)}>
                 Hủy
               </button>
             </div>

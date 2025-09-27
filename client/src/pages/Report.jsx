@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "../styles/Report.css";
-import React from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -53,7 +52,7 @@ const banks = ["",
 const categories = ["Lừa đảo", "Cảnh báo", "Spam", "Tích cực"];
 
 export default function Report() {
-
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [form, setForm] = useState({
     accountName: "",
     accountNumber: "",
@@ -67,7 +66,6 @@ export default function Report() {
     category: categories[0],
     userId: ""
   });
-
   const [showModal, setShowModal] = useState(false);
   const [accountNumberError, setAccountNumberError] = useState("");
   const [zaloError, setZaloError] = useState("");
@@ -75,32 +73,31 @@ export default function Report() {
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [showTermsError, setShowTermsError] = useState(false);
 
-  // ✅ Kiểm tra đăng nhập khi vào trang
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/auth/me", {
-          credentials: "include",
-        });
+        const res = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
         const result = await res.json();
-        if (!result.success) {
-          toast.error("Chưa đăng nhập!", { position: "top-right" });
-          setTimeout(() => (window.location.href = "/"), 1500);
-        } else {
-          // Nếu muốn lấy userId để gửi kèm form
+        if (result?.success) {
+          setIsLoggedIn(true);
           setForm(prev => ({ ...prev, userId: result.user.id }));
+        } else {
+          setIsLoggedIn(false);
         }
-      } catch (err) {
-        toast.error("Lỗi kết nối server!", { position: "top-right" });
-        setTimeout(() => (window.location.href = "/"), 1500);
+      } catch {
+        setIsLoggedIn(false);
       }
     };
     checkAuth();
-  }, []);
+  }, [API_BASE]);
 
   const filteredBanks = banks.filter(bank =>
     bank.toLowerCase().includes(bankSearch.toLowerCase())
   );
+
+  const lockProps = isLoggedIn ? {} : { disabled: true, "aria-disabled": true };
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -109,7 +106,6 @@ export default function Report() {
     } else if (name === "accountNumber" || name === "zalo") {
       const numericValue = value.replace(/\D/g, "");
       setForm({ ...form, [name]: numericValue });
-
       if (/\D/.test(value)) {
         if (name === "accountNumber") setAccountNumberError("⚠️ Chỉ được nhập số.");
         if (name === "zalo") setZaloError("⚠️ Chỉ được nhập số.");
@@ -124,13 +120,16 @@ export default function Report() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isLoggedIn) {
+      toast.error("Bạn cần đăng nhập để gửi cảnh báo.", { position: "top-right" });
+      return;
+    }
     if (!agreedTerms) {
       setShowTermsError(true);
       return;
     }
-
     try {
-      const res = await fetch("http://localhost:5000/api/report", {
+      const res = await fetch(`${API_BASE}/report`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -140,7 +139,6 @@ export default function Report() {
           agreedTerms: true
         })
       });
-
       const result = await res.json();
       if (res.ok) {
         setShowModal(true);
@@ -158,11 +156,10 @@ export default function Report() {
           userId: form.userId
         });
       } else {
-        alert(result.message);
+        toast.error(result.message || "Có lỗi xảy ra!", { position: "top-right" });
       }
-    } catch (err) {
-      console.error("Lỗi mạng:", err);
-      alert("Có lỗi xảy ra!");
+    } catch {
+      toast.error("Có lỗi xảy ra!", { position: "top-right" });
     }
   };
 
@@ -171,14 +168,29 @@ export default function Report() {
     window.location.reload();
   };
 
+  const openLoginModal = (e) => {
+    e.preventDefault();
+    if (typeof window.tcOpenLoginModal === "function") {
+      window.tcOpenLoginModal();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   return (
     <>
       <Header />
       <main className="report-page">
-        <div className="report-title">Gửi Thông Tin Cảnh Báo</div>
+        {!isLoggedIn && (
+          <div className="danger-banner" role="alert" aria-live="assertive">
+            <strong>Bạn cần đăng nhập để gửi cảnh báo.</strong>
+            <span className="danger-sub">Toàn bộ trường nhập đã bị khóa cho đến khi bạn đăng nhập.</span>
+            <button type="button" className="danger-action" onClick={openLoginModal}>Đăng nhập</button>
+          </div>
+        )}
+
+        <div className="report-title">GỬI THÔNG TIN CẢNH BÁO</div>
 
         <form className="report-form" onSubmit={handleSubmit}>
-          {/* Các input giữ nguyên */}
           <div className="form-row">
             <div className="form-group" style={{ width: "40%" }}>
               <label>Tên chủ tài khoản *</label>
@@ -189,6 +201,7 @@ export default function Report() {
                 value={form.accountName}
                 onChange={handleChange}
                 style={{ width: "90%" }}
+                {...lockProps}
               />
             </div>
             <div className="form-group" style={{ width: "48%" }}>
@@ -202,12 +215,12 @@ export default function Report() {
                 pattern="\d*"
                 inputMode="numeric"
                 style={{ width: "90%" }}
+                {...lockProps}
               />
-              {accountNumberError && <small style={{ color: "red" }}>{accountNumberError}</small>}
+              {accountNumberError && <small className="error-text">{accountNumberError}</small>}
             </div>
           </div>
 
-          {/* ✅ BANK SEARCH */}
           <div className="form-row">
             <div className="form-group" style={{ width: "48%" }}>
               <label>Tìm ngân hàng</label>
@@ -217,6 +230,7 @@ export default function Report() {
                 value={bankSearch}
                 onChange={(e) => setBankSearch(e.target.value)}
                 style={{ width: "90%" }}
+                {...lockProps}
               />
               <label>Ngân hàng *</label>
               <select
@@ -224,13 +238,13 @@ export default function Report() {
                 value={form.bank}
                 onChange={handleChange}
                 style={{ width: "90%" }}
+                {...lockProps}
               >
-                {filteredBanks.map((bank, idx) => (
+                {banks.filter(b => b.toLowerCase().includes(bankSearch.toLowerCase())).map((bank, idx) => (
                   <option key={idx} value={bank}>{bank}</option>
                 ))}
               </select>
             </div>
-
             <div className="form-group" style={{ width: "48%" }}>
               <label>Link Facebook (nếu có)</label>
               <input
@@ -239,11 +253,11 @@ export default function Report() {
                 value={form.facebookLink}
                 onChange={handleChange}
                 style={{ width: "90%" }}
+                {...lockProps}
               />
             </div>
           </div>
 
-          {/* Giữ nguyên các trường khác */}
           <div className="form-group">
             <label>Hạng mục *</label>
             <select
@@ -251,6 +265,7 @@ export default function Report() {
               value={form.category}
               onChange={handleChange}
               style={{ width: "90%" }}
+              {...lockProps}
             >
               {categories.map((cat, idx) => (
                 <option key={idx} value={cat}>{cat}</option>
@@ -266,12 +281,13 @@ export default function Report() {
               value={form.content}
               onChange={handleChange}
               style={{ width: "90%" }}
+              {...lockProps}
             ></textarea>
           </div>
 
           <div className="form-group">
             <label>Upload ảnh minh chứng (chọn nhiều ảnh):</label>
-            <input type="file" name="proofs" multiple onChange={handleChange} />
+            <input type="file" name="proofs" multiple onChange={handleChange} {...lockProps} />
             {form.proofs.length > 0 && (
               <ul>
                 {Array.from(form.proofs).map((file, idx) => (
@@ -299,6 +315,7 @@ export default function Report() {
                 value={form.reporterName}
                 onChange={handleChange}
                 style={{ width: "90%" }}
+                {...lockProps}
               />
             </div>
             <div className="form-group" style={{ width: "48%" }}>
@@ -312,8 +329,9 @@ export default function Report() {
                 pattern="\d*"
                 inputMode="numeric"
                 style={{ width: "90%" }}
+                {...lockProps}
               />
-              {zaloError && <small style={{ color: "red" }}>{zaloError}</small>}
+              {zaloError && <small className="error-text">{zaloError}</small>}
             </div>
           </div>
 
@@ -325,6 +343,7 @@ export default function Report() {
                 value="share"
                 checked={form.confirm === "share"}
                 onChange={handleChange}
+                {...lockProps}
               />
               Phốt này tôi chỉ đăng hộ
             </label>
@@ -335,19 +354,23 @@ export default function Report() {
                 value="victim"
                 checked={form.confirm === "victim"}
                 onChange={handleChange}
+                {...lockProps}
               />
               Tôi là nạn nhân và chịu trách nhiệm
             </label>
           </div>
+
           <div className="form-check">
             <label>
               <input
                 type="checkbox"
                 checked={agreedTerms}
                 onChange={(e) => {
+                  if (!isLoggedIn) return;
                   setAgreedTerms(e.target.checked);
                   setShowTermsError(false);
                 }}
+                {...(isLoggedIn ? {} : { disabled: true })}
               />{" "}
               Tôi đã đọc và đồng ý với{" "}
               <a href="/terms" target="_blank" rel="noopener noreferrer">
@@ -360,7 +383,14 @@ export default function Report() {
             )}
           </div>
 
-          <button type="submit" className="submit-btn">Gửi Duyệt</button>
+          <button
+            type="submit"
+            className="submit-btn"
+            disabled={!isLoggedIn}
+            title={!isLoggedIn ? "Hãy đăng nhập để gửi" : "Gửi duyệt"}
+          >
+            Gửi Duyệt
+          </button>
         </form>
 
         {showModal && (
@@ -374,6 +404,7 @@ export default function Report() {
         )}
       </main>
       <Footer />
+      <ToastContainer position="top-right" style={{ marginTop: "60px" }} />
     </>
   );
 }

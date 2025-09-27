@@ -156,3 +156,31 @@ textarea {
   font-size: 0.9rem;
   margin-top: 4px;
 }
+/* Cảnh báo trên tiêu đề – không viền */
+.danger-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px auto 6px;
+  max-width: 980px;           /* khớp bề rộng form hiện có */
+  padding: 10px 14px;
+  background: #fee2e2;        /* đỏ nhạt, không viền */
+  color: #7f1d1d;
+  border-radius: 10px;
+}
+
+.danger-banner .danger-sub {
+  margin-left: 6px;
+  font-size: 13px;
+  opacity: .9;
+}
+
+.danger-banner .danger-action {
+  margin-left: auto;
+  font-weight: 600;
+  text-decoration: none;
+  background: #b91c1c;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 8px;
+}

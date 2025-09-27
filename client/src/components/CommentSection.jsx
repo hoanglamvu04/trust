@@ -11,7 +11,7 @@ dayjs.locale("vi");
 
 export default function CommentSection({ reportId }) {
   const [userId, setUserId] = useState("");
-  const [nickname, setNickname] = useState(""); // nickname từ BE
+  const [nickname, setNickname] = useState("");
   const [loadingUser, setLoadingUser] = useState(true);
   const [comments, setComments] = useState([]);
   const [content, setContent] = useState("");
@@ -21,14 +21,15 @@ export default function CommentSection({ reportId }) {
   const [currentPage, setCurrentPage] = useState(1);
   const commentsPerPage = 10;
 
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+
   const getAvatarUrl = (name) =>
     `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`;
 
-  // Lấy info user, nickname
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/auth/me`, {
+        const res = await fetch(`${API_BASE}/auth/me`, {
           credentials: "include",
         });
         const result = await res.json();
@@ -43,19 +44,15 @@ export default function CommentSection({ reportId }) {
       }
     };
     fetchUser();
-  }, []);
+  }, [API_BASE]);
 
   const isLoggedIn = !!userId;
   const hasNickname = !!nickname.trim();
 
   const fetchComments = async () => {
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/comment/${reportId}`
-      );
+      const res = await fetch(`${API_BASE}/comment/${reportId}`);
       const data = await res.json();
-
-      // replies và likes đều là JSON string => parse ra array nếu cần
       const parsed = data.map((c) => ({
         ...c,
         replies:
@@ -66,10 +63,8 @@ export default function CommentSection({ reportId }) {
           typeof c.likes === "string"
             ? JSON.parse(c.likes || "[]")
             : c.likes || [],
-        // Nếu BE trả về alias, đổi thành nickname, còn không thì dùng c.nickname
-        displayName: c.nickname || c.alias || "Ẩn danh"
+        displayName: c.nickname || c.alias || "Ẩn danh",
       }));
-
       setComments(parsed);
     } catch (err) {
       console.error("❌ Lỗi lấy comments:", err);
@@ -92,9 +87,8 @@ export default function CommentSection({ reportId }) {
       return toast.error("Thiếu nội dung hoặc chưa đăng nhập!");
     if (!hasNickname)
       return toast.error("Bạn cần đặt biệt danh trước khi bình luận!");
-
     try {
-      const res = await fetch("http://localhost:5000/api/comment", {
+      const res = await fetch(`${API_BASE}/comment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -114,15 +108,12 @@ export default function CommentSection({ reportId }) {
 
   const handleLike = async (commentId) => {
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/comment/${commentId}/like`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ userId }),
-        }
-      );
+      const res = await fetch(`${API_BASE}/comment/${commentId}/like`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userId }),
+      });
       if (res.ok) fetchComments();
       else toast.error("Lỗi like!");
     } catch {
@@ -134,17 +125,13 @@ export default function CommentSection({ reportId }) {
     if (!replyText.trim()) return toast.error("Nhập nội dung phản hồi!");
     if (!hasNickname)
       return toast.error("Bạn cần đặt biệt danh trước khi bình luận!");
-
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/comment/${commentId}/reply`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ userId, content: replyText }),
-        }
-      );
+      const res = await fetch(`${API_BASE}/comment/${commentId}/reply`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userId, content: replyText }),
+      });
       if (res.ok) {
         setReplyContent((prev) => ({ ...prev, [commentId]: "" }));
         setReplyingTo(null);
@@ -161,7 +148,7 @@ export default function CommentSection({ reportId }) {
   const handleDeleteComment = async (commentId) => {
     if (!window.confirm("Xác nhận xoá bình luận?")) return;
     try {
-      await fetch(`http://localhost:5000/api/comment/${commentId}`, {
+      await fetch(`${API_BASE}/comment/${commentId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -174,13 +161,10 @@ export default function CommentSection({ reportId }) {
   const handleDeleteReply = async (commentId, index) => {
     if (!window.confirm("Xác nhận xoá phản hồi?")) return;
     try {
-      await fetch(
-        `http://localhost:5000/api/comment/${commentId}/reply/${index}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
+      await fetch(`${API_BASE}/comment/${commentId}/reply/${index}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       fetchComments();
     } catch {
       toast.error("Lỗi xoá phản hồi!");
@@ -234,9 +218,7 @@ export default function CommentSection({ reportId }) {
                 <button
                   className="comment-btn like"
                   onClick={() => handleLike(c.id)}
-                  style={{
-                    color: c.likes.includes(userId) ? "red" : "#ccc",
-                  }}
+                  style={{ color: c.likes.includes(userId) ? "red" : "#ccc" }}
                 >
                   <FaHeart /> <span>{c.likes.length}</span>
                 </button>
@@ -268,10 +250,7 @@ export default function CommentSection({ reportId }) {
                 className="reply-input"
                 value={replyContent[c.id] || ""}
                 onChange={(e) =>
-                  setReplyContent((prev) => ({
-                    ...prev,
-                    [c.id]: e.target.value,
-                  }))
+                  setReplyContent((prev) => ({ ...prev, [c.id]: e.target.value }))
                 }
                 rows={2}
                 placeholder="Nhập nội dung phản hồi..."
@@ -335,7 +314,6 @@ export default function CommentSection({ reportId }) {
               )}
             </div>
           )}
-
         </div>
       ))}
 

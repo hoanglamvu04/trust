@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import React from 'react';
+import React from "react";
 
 const banks = ["",
   "Ví điện tử MoMo",
@@ -45,6 +45,7 @@ const banks = ["",
   "Ngân hàng Phát triển Việt Nam (VDB)",
   "Ngân hàng Hợp tác xã Việt Nam (Co-opBank)"
 ];
+
 const categories = [
   "Lừa đảo", "Cảnh báo", "Spam", "Tích cực",
   "Lừa chuyển khoản", "Bán hàng giả",
@@ -65,30 +66,30 @@ export default function AdminReportForm() {
   const [proofURLs, setProofURLs] = useState([]);
   const [deletedImages, setDeletedImages] = useState([]);
   const [bankSearch, setBankSearch] = useState("");
-  const filteredBanks = banks.filter(b => b.toLowerCase().includes(bankSearch.toLowerCase()));
-
   const [modalOpen, setModalOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
 
- useEffect(() => {
-  if (id) {
-    fetch(`http://localhost:5000/api/admin/reports/${id}`, {
-      credentials: "include",
-    })
-      .then(res => res.json())
-      .then(data => {
-        console.log("DATA REPORT DETAIL:", data); 
-        if (data.success) {
-          const r = data.report;
-          const parsedProof = r.proof ? JSON.parse(r.proof) : [];
-          setForm({ ...r, proofs: [], status: r.status || "approved" });
-          setProofURLs(parsedProof);
-        }
-      })
-      .catch(console.error);
-  }
-}, [id]);
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+  const filteredBanks = banks.filter(b => b.toLowerCase().includes(bankSearch.toLowerCase()));
 
+  useEffect(() => {
+    if (id) {
+      fetch(`${API_BASE}/admin/reports/${id}`, { credentials: "include" })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            const r = data.report;
+            let parsedProof = [];
+            try {
+              parsedProof = r.proof ? JSON.parse(r.proof) : [];
+            } catch {}
+            setForm({ ...r, proofs: [], status: r.status || "approved" });
+            setProofURLs(parsedProof);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [id, API_BASE]);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -100,6 +101,7 @@ export default function AdminReportForm() {
   };
 
   const handleImageDelete = (filename) => {
+    if (!window.confirm("Bạn có chắc muốn xóa ảnh này?")) return;
     setDeletedImages(prev => [...prev, filename]);
     setProofURLs(prev => prev.filter(f => f !== filename));
   };
@@ -114,21 +116,12 @@ export default function AdminReportForm() {
         formData.append(key, form[key]);
       }
     });
-
     formData.append("deletedImages", JSON.stringify(deletedImages));
 
     try {
       const method = id ? "PUT" : "POST";
-      const url = id
-        ? `http://localhost:5000/api/admin/reports/${id}`
-        : "http://localhost:5000/api/admin/reports";
-
-      const res = await fetch(url, {
-        method,
-        body: formData,
-        credentials: "include", 
-      });
-
+      const url = id ? `${API_BASE}/admin/reports/${id}` : `${API_BASE}/admin/reports`;
+      const res = await fetch(url, { method, body: formData, credentials: "include" });
       const json = await res.json();
       if (json.success) {
         alert(id ? "✅ Đã cập nhật!" : "✅ Đã thêm mới!");
@@ -145,7 +138,6 @@ export default function AdminReportForm() {
   return (
     <div className="adm-report-page">
       <h2 className="adm-report-title">{id ? "Chi tiết Báo cáo" : "Thêm Báo cáo mới"}</h2>
-
       <form className="adm-report-form" onSubmit={handleSubmit}>
         <div className="adm-form-row">
           <div className="adm-form-group">
@@ -204,7 +196,7 @@ export default function AdminReportForm() {
               {proofURLs.map((filename, idx) => (
                 <div key={idx} className="adm-proof-wrapper">
                   <img
-                    src={`http://localhost:5000/uploads/reports/${id}/${filename}`}
+                    src={`${API_BASE}/uploads/reports/${id}/${filename}`}
                     alt={`proof-${idx}`}
                     className="adm-proof-thumb"
                     onClick={() => {
@@ -245,12 +237,11 @@ export default function AdminReportForm() {
         </div>
       )}
 
-      {/* Modal hiển thị ảnh lớn + điều hướng */}
       {modalOpen && (
         <div className="adm-modal-overlay" onClick={() => setModalOpen(false)}>
           <div className="adm-modal-content" onClick={(e) => e.stopPropagation()}>
             <img
-              src={`http://localhost:5000/uploads/reports/${id}/${proofURLs[currentImage]}`}
+              src={`${API_BASE}/uploads/reports/${id}/${proofURLs[currentImage]}`}
               alt="Zoom"
               className="adm-modal-img"
             />

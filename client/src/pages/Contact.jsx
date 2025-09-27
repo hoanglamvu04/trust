@@ -1,9 +1,11 @@
+import React from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "../styles/Contact.css";
-import React from 'react';
 
 export default function Contact() {
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = {
@@ -13,18 +15,21 @@ export default function Contact() {
       message: e.target.message.value,
     };
 
-    const res = await fetch("http://localhost:5000/api/contact/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-
-    const result = await res.json();
-    if (result.success) {
-      alert(result.message);
-      e.target.reset();
-    } else {
-      alert(result.message);
+    try {
+      const res = await fetch(`${API_BASE}/contact/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const result = await res.json();
+      if (result.success) {
+        alert(result.message);
+        e.target.reset();
+      } else {
+        alert(result.message);
+      }
+    } catch (err) {
+      alert("Có lỗi xảy ra, vui lòng thử lại sau.");
     }
   };
 
@@ -32,7 +37,6 @@ export default function Contact() {
     <>
       <Header />
       <div className="contact-page">
-        {/* Hàng 1: Liên kết MXH */}
         <div className="contact-social-block">
           <h3>🌟 Liên kết mạng xã hội</h3>
           <ul className="social-links">
@@ -71,7 +75,7 @@ export default function Contact() {
             </p>
           </div>
         </div>
-        {/* Hàng 2: Biểu mẫu liên hệ */}
+
         <div className="contact-form">
           <h2>📞 Liên hệ với TrustCheck</h2>
           <p>Nếu bạn có bất kỳ câu hỏi, góp ý hoặc cần hỗ trợ, vui lòng gửi tin nhắn qua biểu mẫu dưới đây!</p>

@@ -6,69 +6,50 @@ import { FiSearch } from "react-icons/fi";
 
 const user = JSON.parse(localStorage.getItem("user") || "{}");
 const userId = user?.id || null;
-console.log("USER OBJ:", user);
-console.log("userId gửi đi:", userId);
 
 export default function SearchHeader() {
   const [search, setSearch] = useState("");
-  const [stats, setStats] = useState({
-    accounts: 0,
-    facebook: 0,
-    comments: 0,
-    pending: 0,
-  });
+  const [stats, setStats] = useState({ accounts: 0, facebook: 0, comments: 0, pending: 0 });
   const navigate = useNavigate();
+
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/stats");
+        const res = await fetch(`${API_BASE}/stats`);
         const data = await res.json();
-        if (data.success && data.data) {
-          setStats(data.data);
-        } else {
-          console.error("API không trả dữ liệu stats hợp lệ:", data.message);
-        }
+        if (data.success && data.data) setStats(data.data);
+        else console.error("API không trả dữ liệu stats hợp lệ:", data.message);
       } catch (err) {
         console.error("❌ Lỗi lấy thống kê:", err);
       }
     };
     fetchStats();
-  }, []);
+  }, [API_BASE]);
 
-  // Chỉ cho nhập chữ và số, không cho ký tự đặc biệt (trừ khoảng trắng nếu muốn)
   const specialCharRegex = /[^a-zA-Z0-9]/;
   const hasSpecialChar = specialCharRegex.test(search);
-
-  // Ít nhất 7 ký tự, chỉ chữ và số
   const isValidInput = search.length >= 7 && !hasSpecialChar;
 
-  // Lưu log tìm kiếm kèm userId
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!isValidInput) return;
 
-    // Lấy userId từ localStorage (hoặc context/redux tuỳ bạn)
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const userId = user?.id || null;
+    const stored = JSON.parse(localStorage.getItem("user") || "{}");
+    const uid = stored?.id || null;
 
-    // Gửi log tìm kiếm
     try {
-      await fetch("http://localhost:5000/api/searchlog", {
+      await fetch(`${API_BASE}/searchlog`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          account: search.trim(),
-          userId,
-        }),
+        body: JSON.stringify({ account: search.trim(), userId: uid }),
       });
     } catch (err) {
-      // Có thể hiển thị thông báo nhẹ nếu cần
       console.error("Lỗi ghi log tìm kiếm:", err);
     }
 
-    // Chuyển trang
     navigate(`/check-account?search=${encodeURIComponent(search.trim())}`);
   };
 
@@ -76,7 +57,7 @@ export default function SearchHeader() {
     <div className="search-header">
       <h1>Tra Cứu Số Tài Khoản Đáng Ngờ</h1>
       <p>
-        Hiện có <strong>{stats.accounts?.toLocaleString() || 0}</strong> bài viết cảnh báo, 
+        Hiện có <strong>{stats.accounts?.toLocaleString() || 0}</strong> bài viết cảnh báo,
         <strong> {stats.comments?.toLocaleString() || 0}</strong> bình luận,
         <strong> {stats.pending?.toLocaleString() || 0}</strong> cảnh báo đang chờ duyệt.
         Sẽ giúp bạn mua bán an toàn hơn khi online!!!
@@ -90,10 +71,11 @@ export default function SearchHeader() {
           onChange={(e) => setSearch(e.target.value)}
         />
         <button type="submit" disabled={!isValidInput}>
-          <FiSearch style={{ marginRight: 6 }} />Tra cứu
+          <FiSearch style={{ marginRight: 6 }} />
+          Tra cứu
         </button>
       </form>
-      {/* Hiển thị lỗi dưới input */}
+
       {search && (
         <>
           {hasSpecialChar && (

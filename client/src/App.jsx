@@ -4,7 +4,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import "./styles/global.css";
 import "./styles/index.css";
-// Hàm che tên (ẩn họ cuối)
+
 const maskName = (name) => {
   if (!name) return "";
   const arr = name.trim().split(" ");
@@ -12,7 +12,7 @@ const maskName = (name) => {
   arr[arr.length - 1] = "*".repeat(arr[arr.length - 1].length);
   return arr.join(" ");
 };
-// Hàm che số tài khoản (ẩn 4 số cuối)
+
 const maskAccount = (acc) =>
   String(acc).replace(/(\d+)(\d{4})$/, (m, a, b) => "*".repeat(a.length) + b);
 
@@ -24,20 +24,29 @@ function App() {
   const [latestComments, setLatestComments] = useState([]);
   const [topSearched, setTopSearched] = useState([]);
 
-  // Fetch dữ liệu thống kê
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+
   useEffect(() => {
-    fetch("http://localhost:5000/api/statistics/top-reported")
-      .then(res => res.json()).then(setTopReported);
+    fetch(`${API_BASE}/statistics/top-reported`)
+      .then((res) => res.json())
+      .then(setTopReported)
+      .catch(() => setTopReported([]));
 
-    fetch("http://localhost:5000/api/statistics/latest-reports")
-      .then(res => res.json()).then(setLatestReports);
+    fetch(`${API_BASE}/statistics/latest-reports`)
+      .then((res) => res.json())
+      .then(setLatestReports)
+      .catch(() => setLatestReports([]));
 
-    fetch("http://localhost:5000/api/statistics/latest-comments")
-      .then(res => res.json()).then(setLatestComments);
+    fetch(`${API_BASE}/statistics/latest-comments`)
+      .then((res) => res.json())
+      .then(setLatestComments)
+      .catch(() => setLatestComments([]));
 
-    fetch("http://localhost:5000/api/statistics/top-searched")
-      .then(res => res.json()).then(setTopSearched);
-  }, []);
+    fetch(`${API_BASE}/statistics/top-searched`)
+      .then((res) => res.json())
+      .then(setTopSearched)
+      .catch(() => setTopSearched([]));
+  }, [API_BASE]);
 
   return (
     <>
@@ -50,14 +59,14 @@ function App() {
           Nơi bạn kiểm tra – cảnh báo – bảo vệ cộng đồng khỏi các hành vi lừa đảo.
         </p>
 
-        {/* Top 5 tài khoản bị cảnh báo nhiều nhất */}
         <h3 className="index-section-title" style={{ marginTop: 24 }}>
           <span role="img" aria-label="top">🔝</span> 5 Tài khoản bị cảnh báo nhiều nhất
         </h3>
         <div className="index-report-list">
-          {topReported.length === 0
-            ? <p>Chưa có dữ liệu.</p>
-            : topReported.map((acc, i) => (
+          {topReported.length === 0 ? (
+            <p>Chưa có dữ liệu.</p>
+          ) : (
+            topReported.map((acc, i) => (
               <div
                 className="index-report-card"
                 key={acc.accountNumber + i}
@@ -69,17 +78,18 @@ function App() {
                   <span>Số lần cảnh báo: <b>{acc.reportCount}</b></span>
                 </div>
               </div>
-            ))}
+            ))
+          )}
         </div>
 
-        {/* 3 bài cảnh báo mới nhất */}
         <h3 className="index-section-title" style={{ marginTop: 32 }}>
           <span role="img" aria-label="news">🧾</span> 3 Bài cảnh báo mới nhất
         </h3>
         <div className="index-report-list">
-          {latestReports.length === 0
-            ? <p>Chưa có bài cảnh báo mới.</p>
-            : latestReports.map((r, idx) => (
+          {latestReports.length === 0 ? (
+            <p>Chưa có bài cảnh báo mới.</p>
+          ) : (
+            latestReports.map((r) => (
               <div
                 className="index-report-card"
                 key={r.id}
@@ -91,17 +101,18 @@ function App() {
                   <span>👁 {r.views || 0} lượt xem</span>
                 </div>
               </div>
-            ))}
+            ))
+          )}
         </div>
 
-        {/* 5 bình luận mới nhất */}
         <h3 className="index-section-title" style={{ marginTop: 32 }}>
           <span role="img" aria-label="comments">💬</span> 5 Bình luận mới nhất
         </h3>
         <div className="index-report-list">
-          {latestComments.length === 0
-            ? <p>Chưa có bình luận.</p>
-            : latestComments.map((c, idx) => (
+          {latestComments.length === 0 ? (
+            <p>Chưa có bình luận.</p>
+          ) : (
+            latestComments.map((c) => (
               <div
                 className="index-comment-card"
                 key={c.id}
@@ -116,17 +127,18 @@ function App() {
                   <span>🕓 {new Date(c.createdAt).toLocaleString("vi-VN")}</span>
                 </div>
               </div>
-            ))}
+            ))
+          )}
         </div>
 
-        {/* 5 STK được tra cứu nhiều nhất */}
         <h3 className="index-section-title" style={{ marginTop: 32 }}>
           <span role="img" aria-label="search">🔎</span> 5 STK được tra cứu nhiều nhất
         </h3>
         <div className="index-report-list">
-          {topSearched.length === 0
-            ? <p>Chưa có số liệu.</p>
-            : topSearched.map((s, i) => (
+          {topSearched.length === 0 ? (
+            <p>Chưa có số liệu.</p>
+          ) : (
+            topSearched.map((s, i) => (
               <div
                 className="index-report-card"
                 key={s.accountNumber + i}
@@ -138,9 +150,9 @@ function App() {
                   <span>Chưa có tên TK</span>
                 </div>
               </div>
-            ))}
+            ))
+          )}
         </div>
-
       </div>
       <Footer />
     </>

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import "./Header.css";
 import { ToastContainer, toast } from "react-toastify";
@@ -12,8 +12,6 @@ export default function Header() {
   const [isRegister, setIsRegister] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const navigate = useNavigate();
-
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [registerForm, setRegisterForm] = useState({
     username: "",
@@ -24,100 +22,80 @@ export default function Header() {
     createdAt: new Date().toLocaleDateString("vi-VN"),
   });
 
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/auth/me", {
-          credentials: "include",
-        });
+        const res = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
         const result = await res.json();
-        if (result.success) {
-          setUser({ isLoggedIn: true, name: result.user.name });
-        }
-      } catch (err) {
-        console.error("Lỗi lấy user:", err);
-      }
+        if (result.success) setUser({ isLoggedIn: true, name: result.user.name });
+      } catch {}
     };
     fetchUser();
-  }, []);
+  }, [API_BASE]);
 
-  // Lấy số thông báo chưa đọc
   useEffect(() => {
     const fetchUnreadCount = async () => {
       if (!user.isLoggedIn) return;
       try {
-        const res = await fetch("http://localhost:5000/api/notifications/unread-count", {
-          credentials: "include",
-        });
+        const res = await fetch(`${API_BASE}/notifications/unread-count`, { credentials: "include" });
         const data = await res.json();
         setUnreadCount(data.count || 0);
-      } catch (err) {
-        console.error("Lỗi lấy số thông báo chưa đọc:", err);
-      }
+      } catch {}
     };
     fetchUnreadCount();
-  }, [user]);
+  }, [user, API_BASE]);
 
   useEffect(() => {
     const onStorageChange = (e) => {
-      if (e.key === "auth-event") {
-        const { type } = JSON.parse(e.newValue);
-        if (type === "logout") {
-          setUser({ isLoggedIn: false, name: "" });
-          localStorage.removeItem("user");
-          window.location.reload();
-        } else if (type === "login") {
-          window.location.reload();
-        }
+      if (e.key === "auth-event" && e.newValue) {
+        try {
+          const { type } = JSON.parse(e.newValue);
+          if (type === "logout") {
+            setUser({ isLoggedIn: false, name: "" });
+            localStorage.removeItem("user");
+            window.location.reload();
+          } else if (type === "login") {
+            window.location.reload();
+          }
+        } catch {}
       }
     };
     window.addEventListener("storage", onStorageChange);
     return () => window.removeEventListener("storage", onStorageChange);
   }, []);
 
-  const handleProtectedClick = (url) => {
-    if (user.isLoggedIn) {
-      navigate(url);
-    } else {
-      toast.error("Bạn cần đăng nhập!", { position: "top-right" });
-    }
-  };
+  useEffect(() => {
+    window.tcOpenLoginModal = () => setShowLoginModal(true);
+    return () => { try { delete window.tcOpenLoginModal; } catch {} };
+  }, []);
 
   const handleLogin = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(loginForm),
       });
       const result = await res.json();
-
       if (result.success) {
         toast.success(result.message, { position: "top-right" });
         setUser({ isLoggedIn: true, name: result.user.name });
         localStorage.setItem("auth-event", JSON.stringify({ type: "login", time: Date.now() }));
         setShowLoginModal(false);
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        setTimeout(() => window.location.reload(), 500);
       } else {
         toast.error(result.message, { position: "top-right" });
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error("Lỗi kết nối server!", { position: "top-right" });
     }
   };
 
   const handleRegister = async () => {
-    if (
-      !registerForm.username ||
-      !registerForm.name ||
-      !registerForm.email ||
-      !registerForm.password ||
-      !registerForm.confirmPassword
-    ) {
+    if (!registerForm.username || !registerForm.name || !registerForm.email || !registerForm.password || !registerForm.confirmPassword) {
       toast.error("Vui lòng điền đầy đủ thông tin!", { position: "top-right" });
       return;
     }
@@ -125,9 +103,8 @@ export default function Header() {
       toast.error("Mật khẩu không khớp!", { position: "top-right" });
       return;
     }
-
     try {
-      const res = await fetch("http://localhost:5000/api/auth/register", {
+      const res = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(registerForm),
@@ -140,8 +117,7 @@ export default function Header() {
       } else {
         toast.error(result.message, { position: "top-right" });
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error("Lỗi kết nối server!", { position: "top-right" });
     }
   };
@@ -149,12 +125,8 @@ export default function Header() {
   const handleLogout = async () => {
     const confirmLogout = window.confirm("Bạn có chắc chắn muốn đăng xuất?");
     if (!confirmLogout) return;
-
     try {
-      const res = await fetch("http://localhost:5000/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      const res = await fetch(`${API_BASE}/auth/logout`, { method: "POST", credentials: "include" });
       const result = await res.json();
       if (result.success) {
         toast.success(result.message, { position: "top-right" });
@@ -164,8 +136,7 @@ export default function Header() {
       } else {
         toast.error(result.message, { position: "top-right" });
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error("Lỗi server!", { position: "top-right" });
     }
   };
@@ -175,34 +146,20 @@ export default function Header() {
       <header className="header">
         <div className="container">
           <div className="logo">
-            <Link to="/"> <img src="/images/logoweb.png" alt="TrustCheck" /></Link>
+            <Link to="/"><img src="/images/logoweb.png" alt="TrustCheck" /></Link>
           </div>
           <nav>
-              <a className="nav-link" onClick={() => handleProtectedClick("/check-account")}>Tra cứu Thông Tin</a>
-              <a className="nav-link" onClick={() => handleProtectedClick("/phishing-test")}>Kiểm tra nhận biết lừa đảo</a>
-              <a className="nav-link" onClick={() => handleProtectedClick("/contact")}>Liên Hệ ADMIN</a>
-            <a className="nav-link" onClick={() => handleProtectedClick("/report")}>Gửi cảnh báo</a>
-
+            <Link className="nav-link" to="/check-account">Tra cứu Thông Tin</Link>
+            <Link className="nav-link" to="/phishing-test">Kiểm tra nhận biết lừa đảo</Link>
+            <Link className="nav-link" to="/contact">Liên Hệ ADMIN</Link>
+            <Link className="nav-link" to="/report">Gửi cảnh báo</Link>
             {user.isLoggedIn ? (
               <>
-                <a className="nav-link" onClick={() => handleProtectedClick("/profile")}>
-                  👤 {user.name}
-                </a>
-
-                <div
-                  className="notification-wrapper"
-                  onClick={() => setShowNotificationModal(true)}
-                >
-                  <img
-                    src="/images/notification.png"
-                    alt="Thông báo"
-                    width="30"
-                    height="30"
-                    style={{ cursor: "pointer", verticalAlign: "middle", marginLeft: "10px" }}
-                  />
+                <Link className="nav-link" to="/profile">👤 {user.name}</Link>
+                <div className="notification-wrapper" onClick={() => setShowNotificationModal(true)}>
+                  <img src="/images/notification.png" alt="Thông báo" width="30" height="30" style={{ cursor: "pointer", verticalAlign: "middle", marginLeft: "10px" }} />
                   {unreadCount > 0 && <span className="notification-dot"></span>}
                 </div>
-
                 <span className="nav-link" onClick={handleLogout}>Đăng xuất</span>
               </>
             ) : (

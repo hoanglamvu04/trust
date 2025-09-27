@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";  // ✅ thêm Link
+import { Link } from "react-router-dom";
 import "../styles/AdminStyles.css";
 import "../styles/dashboard.css";
-import React from 'react';
+import React from "react";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -14,10 +14,14 @@ export default function Dashboard() {
     contactCount: 0,
   });
 
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/stats/admin");
+        const res = await fetch(`${API_BASE}/stats/admin`, {
+          credentials: "include",
+        });
         const json = await res.json();
         if (json.success && json.data) {
           setStats(json.data);
@@ -30,7 +34,7 @@ export default function Dashboard() {
     };
 
     fetchStats();
-  }, []);
+  }, [API_BASE]);
 
   return (
     <div className="dashboard">

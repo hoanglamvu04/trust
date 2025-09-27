@@ -1,26 +1,26 @@
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SearchHeader from "../components/SearchHeader";
 import NotFoundRating from "../components/NotFoundRating";
 import "../styles/CheckAccount.css";
-import React from "react";
 
 export default function CheckAccount() {
   const [account, setAccount] = useState("");
-  const [reports, setReports] = useState([]);
   const [allReports, setAllReports] = useState([]);
+  const [selectedDate, setSelectedDate] = useState("ALL"); // "ALL" | "dd/mm/yyyy"
   const [currentPage, setCurrentPage] = useState(1);
   const reportsPerPage = 5;
+
   const [searchParams, setSearchParams] = useSearchParams();
   const hasLoggedRef = useRef(new Set());
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
 
-  // ✅ Gọi toàn bộ báo cáo đã duyệt (1 lần)
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/report/all");
+        const res = await fetch(`${API_BASE}/report/all`);
         const data = await res.json();
         if (Array.isArray(data)) {
           const unique = Array.from(new Map(data.map(r => [r.id, r])).values());
@@ -35,60 +35,82 @@ export default function CheckAccount() {
       }
     };
     fetchReports();
-  }, []);
+  }, [API_BASE]);
 
-  // ✅ Lọc theo search param
   useEffect(() => {
-    const query = searchParams.get("search");
-    if (query) {
-      setAccount(query);
+    const query = searchParams.get("search") || "";
+    setAccount(query);
 
-      if (!hasLoggedRef.current.has(query)) {
-        hasLoggedRef.current.add(query);
-        fetch("http://localhost:5000/api/searchlog", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ account: query }),
-        }).catch(err => console.error("Log search error:", err));
-      }
-
-      const filtered = allReports.filter(r => r.accountNumber === query);
-      setReports(filtered);
-    } else {
-      setReports([]);
-      setAccount("");
+    if (query && !hasLoggedRef.current.has(query)) {
+      hasLoggedRef.current.add(query);
+      fetch(`${API_BASE}/searchlog`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ account: query }),
+      }).catch(err => console.error("Log search error:", err));
     }
-  }, [allReports, searchParams]);
+    setCurrentPage(1);
+  }, [searchParams, API_BASE]);
 
-  // ✅ Tính phân trang
-  const indexOfLast = currentPage * reportsPerPage;
-  const indexOfFirst = indexOfLast - reportsPerPage;
-  const currentReports = reports.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(reports.length / reportsPerPage);
+  const filteredByAccount = useMemo(() => {
+    if (!account) return allReports;
+    return allReports.filter(r => r.accountNumber === account);
+  }, [allReports, account]);
 
-  // ✅ Hiển thị tiêu đề báo cáo
-  const renderReportTitle = () => {
-    if (reports.length === 0 || !account) return null;
-
-    const groupedByDate = reports.reduce((acc, r) => {
-      const dateStr = new Date(r.createdAt).toLocaleDateString("vi-VN");
-      if (!acc[dateStr]) acc[dateStr] = [];
-      acc[dateStr].push(r);
+  const { groupedByDate, datesDesc } = useMemo(() => {
+    const grouped = filteredByAccount.reduce((acc, r) => {
+      const d = new Date(r.createdAt).toLocaleDateString("vi-VN");
+      (acc[d] ||= []).push(r);
       return acc;
     }, {});
-
-    const dates = Object.keys(groupedByDate).sort((a, b) => {
+    const dates = Object.keys(grouped).sort((a, b) => {
       const [d1, m1, y1] = a.split("/").map(Number);
       const [d2, m2, y2] = b.split("/").map(Number);
       return new Date(y2, m2 - 1, d2) - new Date(y1, m1 - 1, d1);
     });
+    return { groupedByDate: grouped, datesDesc: dates };
+  }, [filteredByAccount]);
 
-    const selectedDate = dates[0];
+  useEffect(() => {
+    if (selectedDate === "ALL") return;
+    if (selectedDate && !groupedByDate[selectedDate]) {
+      const fallback = datesDesc[0] || "ALL";
+      setSelectedDate(fallback);
+    }
+  }, [groupedByDate, datesDesc, selectedDate]);
+
+  const displayReports = useMemo(() => {
+    if (selectedDate === "ALL") return filteredByAccount;
+    return groupedByDate[selectedDate] || [];
+  }, [filteredByAccount, groupedByDate, selectedDate]);
+
+  const totalPages = Math.ceil(displayReports.length / reportsPerPage);
+  const indexOfLast = currentPage * reportsPerPage;
+  const indexOfFirst = indexOfLast - reportsPerPage;
+  const currentReports = displayReports.slice(indexOfFirst, indexOfLast);
+
+  const onPickDate = (e) => {
+    const iso = e.target.value; // yyyy-mm-dd
+    if (!iso) return;
+    const dt = new Date(iso);
+    const vn = dt.toLocaleDateString("vi-VN");
+    setSelectedDate(vn);
+    setCurrentPage(1);
+  };
+
+  const renderTitle = () => {
+    if (account && filteredByAccount.length === 0) return null;
+    if (selectedDate === "ALL") {
+      return (
+        <h3 className="report-title">
+          📚 Tất cả cảnh báo {account ? `cho STK ${account}` : ""}: {filteredByAccount.length}
+        </h3>
+      );
+    }
     const count = groupedByDate[selectedDate]?.length || 0;
-
     return (
       <h3 className="report-title">
-        📅 Ngày {selectedDate} có {count} cảnh báo liên quan
+        📅 Ngày {selectedDate} có {count} cảnh báo {account ? `cho STK ${account}` : ""}
       </h3>
     );
   };
@@ -101,14 +123,71 @@ export default function CheckAccount() {
           setAccount={setAccount}
           setSearchParams={setSearchParams}
           allReports={allReports}
-          setReports={setReports}
+          setReports={() => {}}
           setCurrentPage={setCurrentPage}
         />
 
-        {renderReportTitle()}
+        {filteredByAccount.length > 0 && (
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", margin: "12px 0" }}>
+            <button
+              className={`date-chip${selectedDate === "ALL" ? " active" : ""}`}
+              onClick={() => { setSelectedDate("ALL"); setCurrentPage(1); }}
+              style={{
+                padding: "6px 10px",
+                borderRadius: 999,
+                border: "1px solid #e5e7eb",
+                background: selectedDate === "ALL" ? "#2563eb" : "#f9fafb",
+                color: selectedDate === "ALL" ? "#fff" : "#111827",
+                fontWeight: 600,
+                fontSize: 13,
+                cursor: "pointer"
+              }}
+            >
+              Tất cả ngày ({filteredByAccount.length})
+            </button>
 
-        {/* ✅ HIỂN THỊ DANH SÁCH KẾT QUẢ */}
-        {reports.length > 0 && (
+            {datesDesc.map(d => {
+              const c = groupedByDate[d]?.length || 0;
+              const active = d === selectedDate;
+              return (
+                <button
+                  key={d}
+                  onClick={() => { setSelectedDate(d); setCurrentPage(1); }}
+                  className={`date-chip${active ? " active" : ""}`}
+                  style={{
+                    padding: "6px 10px",
+                    borderRadius: 999,
+                    border: "1px solid #e5e7eb",
+                    background: active ? "#2563eb" : "#f9fafb",
+                    color: active ? "#fff" : "#111827",
+                    fontWeight: 600,
+                    fontSize: 13,
+                    cursor: "pointer"
+                  }}
+                  title={`Ngày ${d} có ${c} cảnh báo`}
+                >
+                  {d} ({c})
+                </button>
+              );
+            })}
+
+            <input
+              type="date"
+              onChange={onPickDate}
+              style={{
+                marginLeft: "auto",
+                padding: "6px 10px",
+                borderRadius: 10,
+                border: "1px solid #e5e7eb"
+              }}
+              aria-label="Chọn ngày"
+            />
+          </div>
+        )}
+
+        {renderTitle()}
+
+        {currentReports.length > 0 && (
           <div className="report-list">
             {currentReports.map((r, index) => (
               <div
@@ -116,9 +195,7 @@ export default function CheckAccount() {
                 className="report-card"
                 onClick={async () => {
                   try {
-                    await fetch(`http://localhost:5000/api/report/${r.id}/view`, {
-                      method: "PATCH",
-                    });
+                    await fetch(`${API_BASE}/report/${r.id}/view`, { method: "PATCH" });
                   } catch (err) {
                     console.error("❌ Lỗi cập nhật lượt xem:", err);
                   }
@@ -128,7 +205,7 @@ export default function CheckAccount() {
                 <div className="report-top">
                   <span className="report-name">{r.accountName}</span>
                   <span className="report-id">
-                    #{reports.length - (indexOfFirst + index)}
+                    #{displayReports.length - (indexOfFirst + index)}
                   </span>
                 </div>
                 <div className="report-bottom">
@@ -142,13 +219,19 @@ export default function CheckAccount() {
           </div>
         )}
 
-        {/* Nếu không có báo cáo */}
-        {reports.length === 0 && account && (
-          <NotFoundRating account={account} />
+        {account && filteredByAccount.length === 0 && <NotFoundRating account={account} />}
+
+        {currentReports.length === 0 && !account && allReports.length === 0 && (
+          <div style={{ marginTop: 8, color: "#6b7280" }}>Chưa có bài cảnh báo nào.</div>
         )}
 
-        {/* Phân trang */}
-        {reports.length > 0 && (
+        {currentReports.length === 0 && filteredByAccount.length > 0 && (
+          <div style={{ marginTop: 8, color: "#6b7280" }}>
+            Không có cảnh báo cho ngày đã chọn.
+          </div>
+        )}
+
+        {displayReports.length > reportsPerPage && (
           <div className="pagination">
             {Array.from({ length: totalPages }, (_, i) => (
               <button

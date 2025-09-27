@@ -14,12 +14,13 @@ export default function NotFoundRating({ account }) {
   const [searchStats, setSearchStats] = useState({ today: 0, yesterday: 0, last7days: 0, last30days: 0 });
 
   const colorMap = { 1: "red", 2: "orange", 3: "yellow", 4: "blue", 5: "green" };
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
 
   // Lấy thông tin user đăng nhập giống như comment section
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/auth/me`, {
+        const res = await fetch(`${API_BASE}/auth/me`, {
           credentials: "include",
         });
         const result = await res.json();
@@ -38,18 +39,18 @@ export default function NotFoundRating({ account }) {
       }
     };
     fetchUser();
-  }, []);
+  }, [API_BASE]);
 
   // Lấy tổng rating
   useEffect(() => {
     const fetchLabels = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/rating/${account}`);
+        const res = await fetch(`${API_BASE}/rating/${account}`);
         const data = await res.json();
         if (typeof data === "object") {
           const labelData = Object.entries(data).map(([key, count]) => ({
             label: `${key} sao`,
-            count: parseInt(count, 10), // sửa NaN warning
+            count: parseInt(count, 10), // tránh NaN
             color: colorMap[parseInt(key)] || "gray",
             star: parseInt(key)
           }));
@@ -63,7 +64,7 @@ export default function NotFoundRating({ account }) {
       }
     };
     fetchLabels();
-  }, [account, selectedRating]);
+  }, [account, selectedRating, API_BASE]);
 
   // Lấy trạng thái đã vote của user hiện tại
   useEffect(() => {
@@ -73,7 +74,7 @@ export default function NotFoundRating({ account }) {
     }
     const fetchMyVote = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/rating/${account}/my-vote`, {
+        const res = await fetch(`${API_BASE}/rating/${account}/my-vote`, {
           credentials: "include"
         });
         const data = await res.json();
@@ -84,13 +85,13 @@ export default function NotFoundRating({ account }) {
       }
     };
     fetchMyVote();
-  }, [account, userId]);
+  }, [account, userId, API_BASE]);
 
   // Lấy thống kê lượt tìm kiếm
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/searchlog/stats?account=${account}`);
+        const res = await fetch(`${API_BASE}/searchlog/stats?account=${account}`);
         const data = await res.json();
         setSearchStats(data);
       } catch (err) {
@@ -98,7 +99,7 @@ export default function NotFoundRating({ account }) {
       }
     };
     fetchStats();
-  }, [account]);
+  }, [account, API_BASE]);
 
   // Xử lý vote/unvote
   const handleVote = async (num) => {
@@ -109,7 +110,7 @@ export default function NotFoundRating({ account }) {
     }
     if (selectedRating === num) {
       // Unvote
-      await fetch(`http://localhost:5000/api/rating/${account}/unvote`, {
+      await fetch(`${API_BASE}/rating/${account}/unvote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include"
@@ -117,7 +118,7 @@ export default function NotFoundRating({ account }) {
       setSelectedRating(0);
     } else {
       // Vote hoặc chỉnh sửa vote
-      await fetch(`http://localhost:5000/api/rating/${account}/vote`, {
+      await fetch(`${API_BASE}/rating/${account}/vote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -125,7 +126,7 @@ export default function NotFoundRating({ account }) {
       });
       setSelectedRating(num);
     }
-    // labels sẽ tự reload ở useEffect trên (có selectedRating)
+    // labels sẽ reload lại khi selectedRating thay đổi
   };
 
   // Tổng số vote để tính %

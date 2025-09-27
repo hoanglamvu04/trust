@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SidebarProfile from "../components/SidebarProfile";
 import "../styles/ReportHistory.css";
-import React from "react";
 
 export default function ReportHistory() {
   const [filter, setFilter] = useState("all");
   const [reports, setReports] = useState([]);
   const [showReason, setShowReason] = useState(null);
+
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
 
   const toggleFilter = (status) => {
     if (filter === status) setFilter("all");
@@ -18,9 +19,7 @@ export default function ReportHistory() {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/report", {
-          credentials: "include",
-        });
+        const res = await fetch(`${API_BASE}/report`, { credentials: "include" });
         const data = await res.json();
         setReports(Array.isArray(data) ? data : []);
       } catch (err) {
@@ -28,7 +27,7 @@ export default function ReportHistory() {
       }
     };
     fetchReports();
-  }, []);
+  }, [API_BASE]);
 
   const filteredReports =
     filter === "all" ? reports : reports.filter((r) => r.status === filter);
@@ -48,7 +47,6 @@ export default function ReportHistory() {
         <main className="profile-info">
           <div className="prl-tt">LỊCH SỬ TỐ CÁO</div>
 
-          {/* Bộ lọc trạng thái */}
           <div className="filter-wrapper">
             <div className="status-filter">
               <button
@@ -73,10 +71,8 @@ export default function ReportHistory() {
                 Từ chối
               </button>
             </div>
-
           </div>
 
-          {/* Danh sách báo cáo */}
           <ul className="report-list">
             {filteredReports.length === 0 ? (
               <p>Không có dữ liệu.</p>
@@ -84,7 +80,7 @@ export default function ReportHistory() {
               filteredReports.map((r) => (
                 <li
                   key={r.id}
-                  className={"report-item clickable"}
+                  className="report-item clickable"
                   onClick={() => handleViewReport(r)}
                 >
                   <div className="report-main">
@@ -92,7 +88,7 @@ export default function ReportHistory() {
                       {r.accountName} - {r.accountNumber}
                     </span>
                     <span className="report-date">
-                      {new Date(r.createdAt).toLocaleDateString()}
+                      {new Date(r.createdAt).toLocaleDateString("vi-VN")}
                     </span>
                     <span className="report-status-badge" data-status={r.status}>
                       {r.status === "approved" && "✔ Đã đăng"}
@@ -104,7 +100,6 @@ export default function ReportHistory() {
               ))
             )}
           </ul>
-
         </main>
       </div>
       <Footer />

@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SidebarProfile from "../components/SidebarProfile";
@@ -27,46 +26,40 @@ export default function Profile() {
     confirmNew: "",
   });
 
-  // Modal xử lý biệt danh
   const [showConfirmNickname, setShowConfirmNickname] = useState(false);
   const [blockNicknameUntil, setBlockNicknameUntil] = useState(null);
   const [pendingNickname, setPendingNickname] = useState("");
 
-  // Lấy user từ API /api/auth/me (dựa vào cookie)
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/auth/me", {
-          credentials: "include",
-        });
+        const res = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
         const result = await res.json();
         if (result.success) {
           setUserData(result.user);
-          setFormEdit({
-            username: result.user.username,
-            name: result.user.name,
-          });
+          setFormEdit({ username: result.user.username, name: result.user.name });
           setFormNickname(result.user.nickname || "");
         } else {
           toast.error("Chưa đăng nhập!", { position: "top-right" });
           setTimeout(() => (window.location.href = "/"), 1500);
         }
-      } catch (err) {
+      } catch {
         toast.error("Lỗi kết nối server!", { position: "top-right" });
         setTimeout(() => (window.location.href = "/"), 1500);
       }
     };
     fetchUser();
-  }, []);
+  }, [API_BASE]);
 
   const handleChangeInfo = async () => {
     if (!formEdit.username || !formEdit.name) {
       toast.error("Vui lòng nhập đầy đủ thông tin!", { position: "top-right" });
       return;
     }
-
     try {
-      const res = await fetch("http://localhost:5000/api/auth/update-user", {
+      const res = await fetch(`${API_BASE}/auth/update-user`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -88,12 +81,11 @@ export default function Profile() {
       } else {
         toast.error(result.message, { position: "top-right" });
       }
-    } catch (err) {
+    } catch {
       toast.error("Lỗi server!", { position: "top-right" });
     }
   };
 
-  // Khi nhấn "Lưu" trong form biệt danh => mở modal xác nhận
   const handleUpdateNickname = () => {
     const newNickname = formNickname.trim();
     if (!newNickname) {
@@ -104,10 +96,9 @@ export default function Profile() {
     setShowConfirmNickname(true);
   };
 
-  // Thực hiện request đổi biệt danh khi xác nhận
   const confirmChangeNickname = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/users/nickname", {
+      const res = await fetch(`${API_BASE}/users/nickname`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -116,18 +107,12 @@ export default function Profile() {
       const result = await res.json();
       if (result.success) {
         toast.success("Cập nhật biệt danh thành công!", { position: "top-right" });
-        setUserData((prev) => ({
-          ...prev,
-          nickname: pendingNickname,
-        }));
+        setUserData((prev) => ({ ...prev, nickname: pendingNickname }));
         setFormNickname(pendingNickname);
         setNicknameMode(false);
         setShowConfirmNickname(false);
       } else {
-        // Nếu bị chặn bởi blockUntil thì show modal cảnh báo
-        if (result.blockUntil) {
-          setBlockNicknameUntil(result.blockUntil);
-        }
+        if (result.blockUntil) setBlockNicknameUntil(result.blockUntil);
         setShowConfirmNickname(false);
         toast.error(result.message, { position: "top-right" });
       }
@@ -136,18 +121,14 @@ export default function Profile() {
       setShowConfirmNickname(false);
     }
   };
+
   function isStrongPassword(password) {
-    // Ít nhất 6 ký tự, có chữ hoa, số, ký tự đặc biệt
     return /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,}$/.test(password);
   }
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    if (
-      !formPassword.oldPassword ||
-      !formPassword.newPassword ||
-      !formPassword.confirmNew
-    ) {
+    if (!formPassword.oldPassword || !formPassword.newPassword || !formPassword.confirmNew) {
       toast.error("Vui lòng điền đầy đủ thông tin!", { position: "top-right" });
       return;
     }
@@ -156,15 +137,11 @@ export default function Profile() {
       return;
     }
     if (!isStrongPassword(formPassword.newPassword)) {
-      toast.error(
-        "Mật khẩu phải ít nhất 6 ký tự, gồm chữ hoa, số, ký tự đặc biệt!",
-        { position: "top-right" }
-      );
+      toast.error("Mật khẩu phải ít nhất 6 ký tự, gồm chữ hoa, số, ký tự đặc biệt!", { position: "top-right" });
       return;
     }
-
     try {
-      const res = await fetch("http://localhost:5000/api/auth/change-password", {
+      const res = await fetch(`${API_BASE}/auth/change-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -182,7 +159,7 @@ export default function Profile() {
       } else {
         toast.error(result.message, { position: "top-right" });
       }
-    } catch (err) {
+    } catch {
       toast.error("Lỗi server!", { position: "top-right" });
     }
   };
@@ -190,29 +167,22 @@ export default function Profile() {
   return (
     <>
       <Header />
-      <ToastContainer
-        position="top-right"
-        style={{ marginTop: "60px" }}
-      />
-
+      <ToastContainer position="top-right" style={{ marginTop: "60px" }} />
       <div className="profile-page">
         <SidebarProfile active="profile" />
-
         <div className="profile-glass-root">
           <div className="profile-glass-card">
             <div className="profile-glass-title">Hồ sơ cá nhân</div>
-
             <div className="profile-glass-avatar-box">
               <img
-                src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userData.nickname || userData.username)}`}
+                src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
+                  userData.nickname || userData.username
+                )}`}
                 alt="avatar"
                 className="profile-glass-avatar-img"
               />
-              <div className="profile-glass-nickname">
-                {userData.nickname || userData.username}
-              </div>
+              <div className="profile-glass-nickname">{userData.nickname || userData.username}</div>
             </div>
-
             <div className="profile-glass-fields">
               <div className="profile-glass-row">
                 <span className="profile-glass-label">Tên đăng nhập:</span>
@@ -221,9 +191,7 @@ export default function Profile() {
                     type="text"
                     className="profile-glass-input"
                     value={formEdit.username}
-                    onChange={e =>
-                      setFormEdit({ ...formEdit, username: e.target.value })
-                    }
+                    onChange={(e) => setFormEdit({ ...formEdit, username: e.target.value })}
                   />
                 ) : (
                   <span className="profile-glass-value">{userData.username}</span>
@@ -236,9 +204,7 @@ export default function Profile() {
                     type="text"
                     className="profile-glass-input"
                     value={formEdit.name}
-                    onChange={e =>
-                      setFormEdit({ ...formEdit, name: e.target.value })
-                    }
+                    onChange={(e) => setFormEdit({ ...formEdit, name: e.target.value })}
                   />
                 ) : (
                   <span className="profile-glass-value">{userData.name}</span>
@@ -251,12 +217,9 @@ export default function Profile() {
               <div className="profile-glass-row">
                 <span className="profile-glass-label">Ngày tạo:</span>
                 <span className="profile-glass-value">
-                  {userData.createdAt
-                    ? new Date(userData.createdAt).toLocaleDateString("vi-VN")
-                    : "Chưa có"}
+                  {userData.createdAt ? new Date(userData.createdAt).toLocaleDateString("vi-VN") : "Chưa có"}
                 </span>
               </div>
-
               <div className="profile-glass-row">
                 <span className="profile-glass-label">Biệt danh:</span>
                 {!nicknameMode ? (
@@ -280,7 +243,7 @@ export default function Profile() {
                     <input
                       className="profile-glass-input"
                       value={formNickname}
-                      onChange={e => setFormNickname(e.target.value)}
+                      onChange={(e) => setFormNickname(e.target.value)}
                       maxLength={100}
                       placeholder="Nhập biệt danh mới..."
                       autoFocus
@@ -300,7 +263,6 @@ export default function Profile() {
                   </>
                 )}
               </div>
-
               <div className="profile-glass-row">
                 <span className="profile-glass-label">Mật khẩu:</span>
                 <span className="profile-glass-value">********</span>
@@ -314,46 +276,15 @@ export default function Profile() {
                 )}
               </div>
             </div>
-
             {showPasswordForm && (
               <div className="profile-glass-pw-form">
-                <form
-                  onSubmit={e => {
-                    e.preventDefault();
-                    if (
-                      !formPassword.oldPassword ||
-                      !formPassword.newPassword ||
-                      !formPassword.confirmNew
-                    ) {
-                      toast.error("Vui lòng điền đầy đủ thông tin!", { position: "top-right" });
-                      return;
-                    }
-                    if (formPassword.newPassword !== formPassword.confirmNew) {
-                      toast.error("Mật khẩu mới không khớp!", { position: "top-right" });
-                      return;
-                    }
-                    if (!isStrongPassword(formPassword.newPassword)) {
-                      toast.error(
-                        "Mật khẩu phải ít nhất 6 ký tự, gồm chữ hoa, số, ký tự đặc biệt!",
-                        { position: "top-right" }
-                      );
-                      return;
-                    }
-                    // Xử lý đổi mật khẩu như cũ
-                    handleChangePassword(e);
-                  }}
-                >
+                <form onSubmit={handleChangePassword}>
                   <label>Mật khẩu cũ:</label>
                   <input
                     type="password"
                     className="profile-glass-input"
                     value={formPassword.oldPassword}
-                    onChange={e =>
-                      setFormPassword({
-                        ...formPassword,
-                        oldPassword: e.target.value,
-                      })
-                    }
+                    onChange={(e) => setFormPassword({ ...formPassword, oldPassword: e.target.value })}
                   />
                   <br />
                   <label>Mật khẩu mới:</label>
@@ -361,12 +292,7 @@ export default function Profile() {
                     type="password"
                     className="profile-glass-input"
                     value={formPassword.newPassword}
-                    onChange={e =>
-                      setFormPassword({
-                        ...formPassword,
-                        newPassword: e.target.value,
-                      })
-                    }
+                    onChange={(e) => setFormPassword({ ...formPassword, newPassword: e.target.value })}
                   />
                   <small style={{ color: "#888" }}>
                     Mật khẩu tối thiểu 6 ký tự, gồm chữ hoa, số và ký tự đặc biệt.
@@ -377,12 +303,7 @@ export default function Profile() {
                     type="password"
                     className="profile-glass-input"
                     value={formPassword.confirmNew}
-                    onChange={e =>
-                      setFormPassword({
-                        ...formPassword,
-                        confirmNew: e.target.value,
-                      })
-                    }
+                    onChange={(e) => setFormPassword({ ...formPassword, confirmNew: e.target.value })}
                   />
                   <div className="profile-glass-btn-group">
                     <button type="submit" className="profile-glass-btn">
@@ -399,13 +320,9 @@ export default function Profile() {
                 </form>
               </div>
             )}
-
             <div className="profile-glass-btn-group">
               {!editMode ? (
-                <button
-                  className="profile-glass-btn"
-                  onClick={() => setEditMode(true)}
-                >
+                <button className="profile-glass-btn" onClick={() => setEditMode(true)}>
                   Chỉnh sửa thông tin
                 </button>
               ) : (
@@ -425,7 +342,6 @@ export default function Profile() {
           </div>
         </div>
       </div>
-      {/* Modal xác nhận đổi biệt danh */}
       {showConfirmNickname && (
         <div className="modal-overlay" onClick={() => setShowConfirmNickname(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -434,10 +350,7 @@ export default function Profile() {
               Một khi thay đổi, bạn sẽ phải chờ 14 ngày để đổi lại.
             </p>
             <div className="modal-actions">
-              <button
-                className="profile-glass-btn"
-                onClick={confirmChangeNickname}
-              >
+              <button className="profile-glass-btn" onClick={confirmChangeNickname}>
                 Tiếp tục
               </button>
               <button
@@ -450,8 +363,6 @@ export default function Profile() {
           </div>
         </div>
       )}
-
-      {/* Modal cảnh báo chưa đủ 14 ngày */}
       {blockNicknameUntil && (
         <div className="modal-overlay" onClick={() => setBlockNicknameUntil(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -471,7 +382,6 @@ export default function Profile() {
           </div>
         </div>
       )}
-
       <Footer />
     </>
   );

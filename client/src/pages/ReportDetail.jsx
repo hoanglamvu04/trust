@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SearchHeader from "../components/SearchHeader";
 import CommentSection from "../components/CommentSection";
 import "../styles/ReportDetail.css";
-import React from "react";
 
 export default function ReportDetail() {
   const [report, setReport] = useState(null);
@@ -17,6 +16,9 @@ export default function ReportDetail() {
   const location = useLocation();
   const [currentUser, setCurrentUser] = useState(null);
 
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+  const FILE_BASE = API_BASE.replace(/\/api$/i, "");
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (search.trim()) {
@@ -26,42 +28,32 @@ export default function ReportDetail() {
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser) {
-      setCurrentUser(storedUser);
-    }
+    if (storedUser) setCurrentUser(storedUser);
   }, []);
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/report-detail/${id}`, {
-        credentials: "include"
-      });
-      if (!res.ok) throw new Error("Không tìm thấy báo cáo!");
-      const data = await res.json();
-      const storedUser = JSON.parse(localStorage.getItem("user"));
 
-      if (
-        data.status !== "approved" &&              // status, không phải approved
-        (!storedUser || storedUser.id !== data.userId)
-      ) {
-        alert("Báo cáo này chưa được duyệt hoặc bạn không có quyền truy cập.");
-        setReport(null);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/report-detail/${id}`, { credentials: "include" });
+        if (!res.ok) throw new Error("Không tìm thấy báo cáo!");
+        const data = await res.json();
+        const storedUser = JSON.parse(localStorage.getItem("user"));
+        if (data.status !== "approved" && (!storedUser || storedUser.id !== data.userId)) {
+          alert("Báo cáo này chưa được duyệt hoặc bạn không có quyền truy cập.");
+          setReport(null);
+          setLoading(false);
+          return;
+        }
+        setReport(data);
+      } catch (err) {
+        console.error(err);
+        alert("Lỗi: " + err.message);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      setReport(data);
-    } catch (err) {
-      console.error(err);
-      alert("Lỗi: " + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchData();
-}, [id]);
-
-
+    };
+    fetchData();
+  }, [id, API_BASE]);
 
   useEffect(() => {
     const hash = location.hash;
@@ -74,9 +66,7 @@ useEffect(() => {
         clearInterval(intervalId);
       } else {
         retries++;
-        if (retries > 10) {
-          clearInterval(intervalId);
-        }
+        if (retries > 10) clearInterval(intervalId);
       }
     }, 300);
   }, [location, report]);
@@ -96,18 +86,13 @@ useEffect(() => {
     }
   }
 
-  // Ẩn tên cuối, VD: "Nguyen Nguyen Diem Huong" => "Nguyen Nguyen Diem *"
   function maskLastName(name) {
     if (!name) return "";
     name = name.trim();
-    // Nếu tên ngắn hơn 5 ký tự thì che hết thành *****
     if (name.length <= 5) return "*".repeat(name.length);
-    // Che 5 ký tự cuối, giữ nguyên phần đầu
     return name.slice(0, -5) + "*****";
   }
 
-
-  // Che 4 số cuối STK, VD: "2345678908" => "234567****"
   function maskAccountNumber(number) {
     if (!number) return "";
     const numStr = number.toString();
@@ -141,22 +126,36 @@ useEffect(() => {
                 </td>
               </tr>
               <tr><td><img src="/images/bank.png" alt="bank" /> Ngân Hàng:</td><td>{report.bank}</td></tr>
-              <tr><td><img src="/images/fb.png" alt="fb" /> Facebook:</td><td>{report.facebookLink ? <a href={report.facebookLink} target="_blank" rel="noopener noreferrer">{report.facebookLink}</a> : "Không có link Facebook"}</td></tr>
+              <tr>
+                <td><img src="/images/fb.png" alt="fb" /> Facebook:</td>
+                <td>
+                  {report.facebookLink ? (
+                    <a href={report.facebookLink} target="_blank" rel="noopener noreferrer">
+                      {report.facebookLink}
+                    </a>
+                  ) : (
+                    "Không có link Facebook"
+                  )}
+                </td>
+              </tr>
               <tr><td><img src="/images/details3.png" alt="hm" /> Hạng Mục:</td><td>{report.category || "Không xác định"}</td></tr>
               <tr>
                 <td><img src="/images/anh.png" alt="img" /> Ảnh Bằng Chứng:</td>
                 <td>
                   <div className="proof-gallery">
                     {proofArray.length > 0 ? (
-                      proofArray.map((filename, idx) => (
-                        <img
-                          key={idx}
-                          src={`http://localhost:5000/uploads/reports/${report.id}/${filename}`}
-                          alt={`Proof ${idx + 1}`}
-                          onClick={() => setZoomedImage(`http://localhost:5000/uploads/reports/${report.id}/${filename}`)}
-                          style={{ maxWidth: "200px", cursor: "pointer", borderRadius: "8px", margin: "5px" }}
-                        />
-                      ))
+                      proofArray.map((filename, idx) => {
+                        const src = `${FILE_BASE}/uploads/reports/${report.id}/${filename}`;
+                        return (
+                          <img
+                            key={idx}
+                            src={src}
+                            alt={`Proof ${idx + 1}`}
+                            onClick={() => setZoomedImage(src)}
+                            style={{ maxWidth: "200px", cursor: "pointer", borderRadius: "8px", margin: "5px" }}
+                          />
+                        );
+                      })
                     ) : (
                       <p>Không có ảnh bằng chứng.</p>
                     )}
@@ -170,7 +169,8 @@ useEffect(() => {
             <h3><img src="/images/details3.png" alt="nd" /> Nội Dung Cảnh Báo:</h3>
             <p className="report-text">{report.content}</p>
             <p className="report-meta">
-              Bài cảnh báo <strong>{report.accountName}</strong> tạo ngày <strong>{new Date(report.createdAt).toLocaleDateString()}</strong>.
+              Bài cảnh báo <strong>{report.accountName}</strong> tạo ngày{" "}
+              <strong>{new Date(report.createdAt).toLocaleDateString()}</strong>.
             </p>
             <p className="note">⚠️ <strong>Lưu ý:</strong> Bài đăng chỉ cung cấp thông tin cảnh báo, không kết luận cá nhân/tổ chức vi phạm pháp luật</p>
           </div>
